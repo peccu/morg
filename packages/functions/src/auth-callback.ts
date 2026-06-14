@@ -1,7 +1,6 @@
 import type { Handler } from '@netlify/functions'
-import { google } from 'googleapis'
 import { parseCookies, makeSessionCookie } from './lib/cookie.js'
-import { createOAuth2Client } from './lib/google-auth.js'
+import { exchangeCodeForTokens, getUserEmail } from './lib/google-auth.js'
 
 export const handler: Handler = async (event, _context) => {
   const appUrl = process.env.APP_URL ?? 'http://localhost:5173'
@@ -21,22 +20,18 @@ export const handler: Handler = async (event, _context) => {
   }
 
   try {
-    const oauth2 = createOAuth2Client()
-    const { tokens } = await oauth2.getToken(code)
+    const tokens = await exchangeCodeForTokens(code)
 
-    if (!tokens.access_token || !tokens.refresh_token) {
-      throw new Error('Missing tokens in response')
+    if (!tokens.refresh_token) {
+      throw new Error('No refresh_token returned — was prompt=consent set?')
     }
 
-    oauth2.setCredentials(tokens)
-    const oauth2Api = google.oauth2({ version: 'v2', auth: oauth2 })
-    const { data: userInfo } = await oauth2Api.userinfo.get()
-
+    const email = await getUserEmail(tokens.access_token)
     const session = {
       accessToken: tokens.access_token,
       refreshToken: tokens.refresh_token,
-      expiresAt: tokens.expiry_date ?? Date.now() + 3600 * 1000,
-      email: userInfo.email ?? '',
+      expiresAt: Date.now() + tokens.expires_in * 1000,
+      email,
     }
 
     return {
@@ -44,7 +39,7 @@ export const handler: Handler = async (event, _context) => {
       headers: {
         Location: `${appUrl}/inbox`,
         'Set-Cookie': makeSessionCookie(session),
-      },
+      } as Record<string, string>,
       body: '',
     }
   } catch (err) {

@@ -1,17 +1,10 @@
 import type { Handler } from '@netlify/functions'
 import { randomBytes } from 'crypto'
-import { createOAuth2Client, GMAIL_SCOPES } from './lib/google-auth.js'
+import { buildAuthUrl } from './lib/google-auth.js'
 
 export const handler: Handler = async (_event, _context) => {
   const state = randomBytes(16).toString('hex')
-  const oauth2 = createOAuth2Client()
-
-  const url = oauth2.generateAuthUrl({
-    access_type: 'offline',
-    prompt: 'consent',
-    scope: GMAIL_SCOPES,
-    state,
-  })
+  const url = buildAuthUrl(state)
 
   return {
     statusCode: 302,

@@ -8,8 +8,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@morg/shared": "workspace:*",
-    "googleapis": "^148.0.0"
+    "@morg/shared": "workspace:*"
   },
   "devDependencies": {
     "@netlify/functions": "^2.8.2",

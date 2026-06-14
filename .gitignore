@@ -37,6 +37,7 @@ bun-error.log*
 
 # Netlify
 .netlify/
+netlify/functions/
 
 # TypeScript
 *.tsbuildinfo

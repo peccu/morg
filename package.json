@@ -7,11 +7,10 @@
     "packages/*"
   ],
   "scripts": {
-    "dev": "bun run --cwd apps/web dev",
-    "build": "bun run build:shared && bun run build:web",
+    "dev:web": "bun run --cwd apps/web dev",
+    "build:all": "bun run build:functions && bun run build:web",
     "build:web": "bun run --cwd apps/web build",
-    "build:shared": "bun run --cwd packages/shared build",
-    "build:functions": "bun run --cwd packages/functions build",
-    "typecheck": "bun run --filter '*' typecheck"
+    "build:functions": "bun build packages/functions/src/auth-google.ts packages/functions/src/auth-callback.ts packages/functions/src/auth-logout.ts packages/functions/src/auth-status.ts --target=node --outdir=netlify/functions --format=esm",
+    "typecheck": "bun run --cwd apps/web typecheck && bun run --cwd packages/functions typecheck"
   }
 }
