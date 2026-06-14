@@ -1,0 +1,19 @@
+{
+  "name": "@morg/functions",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "tsc && node scripts/bundle.mjs",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@morg/shared": "workspace:*",
+    "googleapis": "^148.0.0"
+  },
+  "devDependencies": {
+    "@netlify/functions": "^2.8.2",
+    "@types/node": "^25.9.3",
+    "typescript": "^5.8.3"
+  }
+}
