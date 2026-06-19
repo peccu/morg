@@ -1,0 +1,49 @@
+<script setup lang="ts">
+import { onMounted } from 'vue'
+import { useRouter } from 'vue-router'
+import { useAuthStore } from '@/stores/auth'
+
+const router = useRouter()
+const auth = useAuthStore()
+
+// PWAホーム画面から開いている場合は navigator.standalone が true
+const isPWA = (navigator as { standalone?: boolean }).standalone === true
+  || window.matchMedia('(display-mode: standalone)').matches
+
+onMounted(async () => {
+  await auth.checkAuth()
+  // PWAでなければそのまま受信トレイへ
+  if (!isPWA) {
+    router.replace({ name: 'inbox' })
+  }
+})
+</script>
+
+<template>
+  <div class="min-h-screen flex items-center justify-center bg-gray-50 p-6">
+    <div class="max-w-sm w-full bg-white rounded-xl shadow-sm p-8 text-center space-y-5">
+      <div class="w-16 h-16 rounded-full bg-green-100 flex items-center justify-center mx-auto">
+        <svg class="w-8 h-8 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+        </svg>
+      </div>
+
+      <div>
+        <h1 class="text-xl font-bold text-gray-900">ログイン完了</h1>
+        <p v-if="isPWA" class="mt-2 text-sm text-gray-500 leading-relaxed">
+          ホーム画面の <strong>morg</strong> アイコンをタップしてアプリに戻ってください。
+        </p>
+        <p v-else class="mt-2 text-sm text-gray-500">
+          受信トレイに移動します...
+        </p>
+      </div>
+
+      <a
+        href="/inbox"
+        class="block w-full py-2.5 bg-blue-500 text-white rounded-lg text-sm font-medium hover:bg-blue-600"
+      >
+        受信トレイを開く
+      </a>
+    </div>
+  </div>
+</template>

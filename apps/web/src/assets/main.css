@@ -54,5 +54,12 @@
   body {
     background-color: hsl(var(--background));
     color: hsl(var(--foreground));
+    -webkit-tap-highlight-color: transparent;
+  }
+  .safe-top {
+    padding-top: max(0.5rem, env(safe-area-inset-top));
+  }
+  .safe-bottom {
+    padding-bottom: max(0.5rem, env(safe-area-inset-bottom));
   }
 }

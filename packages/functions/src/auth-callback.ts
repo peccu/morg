@@ -37,7 +37,7 @@ export const handler: Handler = async (event, _context) => {
     return {
       statusCode: 302,
       headers: {
-        Location: `${appUrl}/inbox`,
+        Location: `${appUrl}/login-success`,
         'Set-Cookie': makeSessionCookie(session),
       } as Record<string, string>,
       body: '',
