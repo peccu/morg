@@ -4,8 +4,8 @@ import ThreadListItem from './ThreadListItem.vue'
 import { useThreads } from '@/composables/useThreads'
 import type { ThreadListItem as TThreadListItem } from '@morg/shared'
 
-const props = defineProps<{ query: string }>()
-const emit = defineEmits<{ select: [thread: TThreadListItem] }>()
+const props = defineProps<{ query: string; checkedIds: Set<string> }>()
+const emit = defineEmits<{ select: [thread: TThreadListItem]; check: [id: string] }>()
 
 const selectedId = ref<string | null>(null)
 const q = computed(() => props.query)
@@ -45,7 +45,9 @@ function select(thread: TThreadListItem) {
           :key="thread.threadId"
           :thread="thread"
           :selected="selectedId === thread.threadId"
+          :checked="checkedIds.has(thread.threadId)"
           @click="select(thread)"
+          @check="emit('check', $event)"
         />
         <div v-if="hasNextPage" class="p-4 text-center">
           <button

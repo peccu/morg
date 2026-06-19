@@ -3,12 +3,25 @@ import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import ThreadList from '@/components/ThreadList.vue'
+import BulkActionBar from '@/components/BulkActionBar.vue'
 import type { ThreadListItem } from '@morg/shared'
 
 const auth = useAuthStore()
 const router = useRouter()
 const query = ref('in:inbox')
 const searchInput = ref('')
+const checkedIds = ref(new Set<string>())
+
+function toggleCheck(id: string) {
+  const next = new Set(checkedIds.value)
+  if (next.has(id)) next.delete(id)
+  else next.add(id)
+  checkedIds.value = next
+}
+
+function clearChecked() {
+  checkedIds.value = new Set()
+}
 
 function onSearch() {
   const trimmed = searchInput.value.trim()
@@ -84,8 +97,17 @@ async function onLogout() {
       </aside>
 
       <!-- スレッドリスト -->
-      <main class="flex-1 overflow-hidden">
-        <ThreadList :query="query" @select="onSelect" />
+      <main class="flex-1 overflow-hidden flex flex-col">
+        <BulkActionBar
+          :selected-ids="[...checkedIds]"
+          @clear="clearChecked"
+        />
+        <ThreadList
+          :query="query"
+          :checked-ids="checkedIds"
+          @select="onSelect"
+          @check="toggleCheck"
+        />
       </main>
     </div>
   </div>

@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import type { ThreadListItem } from '@morg/shared'
 
-const props = defineProps<{ thread: ThreadListItem; selected: boolean }>()
-defineEmits<{ click: [] }>()
+const props = defineProps<{ thread: ThreadListItem; selected: boolean; checked: boolean }>()
+defineEmits<{ click: []; check: [id: string] }>()
 
 function formatDate(raw: string): string {
   if (!raw) return ''
@@ -34,8 +34,22 @@ function senderName(from: string): string {
     }"
     @click="$emit('click')"
   >
-    <!-- 未読インジケーター -->
-    <div class="mt-1.5 w-2 h-2 rounded-full flex-shrink-0" :class="thread.unread ? 'bg-blue-500' : 'bg-transparent'" />
+    <!-- チェックボックス / 未読インジケーター -->
+    <div class="mt-1 flex-shrink-0 w-5 h-5 flex items-center justify-center">
+      <input
+        v-if="checked || selected"
+        type="checkbox"
+        :checked="checked"
+        class="w-4 h-4 cursor-pointer"
+        @click.stop="$emit('check', thread.threadId)"
+      />
+      <div
+        v-else
+        class="w-2 h-2 rounded-full"
+        :class="thread.unread ? 'bg-blue-500' : 'bg-transparent'"
+        @click.stop="$emit('check', thread.threadId)"
+      />
+    </div>
 
     <div class="flex-1 min-w-0">
       <div class="flex items-baseline justify-between gap-2">
