@@ -2,15 +2,20 @@ import type { ThreadListItem, GmailThread, GmailMessageHeader } from '@morg/shar
 
 const BASE = 'https://gmail.googleapis.com/gmail/v1/users/me'
 
-async function gFetch(path: string, token: string, params?: Record<string, string>) {
+async function gFetch(path: string, token: string, params?: Record<string, string | string[]>) {
   const url = new URL(`${BASE}/${path}`)
-  if (params) Object.entries(params).forEach(([k, v]) => url.searchParams.set(k, v))
+  if (params) {
+    Object.entries(params).forEach(([k, v]) => {
+      if (Array.isArray(v)) v.forEach((s) => url.searchParams.append(k, s))
+      else url.searchParams.set(k, v)
+    })
+  }
   const res = await fetch(url.toString(), {
     headers: { Authorization: `Bearer ${token}` },
   })
   if (!res.ok) {
     const text = await res.text()
-    throw new Error(`Gmail API error ${res.status}: ${text}`)
+    throw new Error(`Gmail API ${res.status}: ${text}`)
   }
   return res.json()
 }
@@ -30,7 +35,7 @@ export async function listThreads(token: string, q: string, pageToken?: string, 
 export async function getThread(token: string, id: string): Promise<GmailThread> {
   return gFetch(`threads/${id}`, token, {
     format: 'metadata',
-    metadataHeaders: ['Subject', 'From', 'Date'].join(','),
+    metadataHeaders: ['Subject', 'From', 'To', 'Date'],
   }) as Promise<GmailThread>
 }
 

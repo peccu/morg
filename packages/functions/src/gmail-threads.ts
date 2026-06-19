@@ -23,7 +23,8 @@ export const handler: Handler = async (event) => {
 
     return { statusCode: 200, headers, body: JSON.stringify(data) }
   } catch (err) {
-    console.error('gmail-threads error:', err)
-    return { statusCode: 500, body: JSON.stringify({ error: 'Failed to fetch threads' }) }
+    const message = err instanceof Error ? err.message : String(err)
+    console.error('gmail-threads error:', message)
+    return { statusCode: 500, body: JSON.stringify({ error: message }) }
   }
 }
