@@ -1,31 +1,92 @@
 <script setup lang="ts">
+import { ref } from 'vue'
+import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
+import ThreadList from '@/components/ThreadList.vue'
+import type { ThreadListItem } from '@morg/shared'
 
 const auth = useAuthStore()
+const router = useRouter()
+const query = ref('in:inbox')
+const searchInput = ref('')
+
+function onSearch() {
+  const trimmed = searchInput.value.trim()
+  query.value = trimmed || 'in:inbox'
+}
+
+function onSelect(thread: ThreadListItem) {
+  router.push({ name: 'thread', params: { id: thread.threadId } })
+}
+
+async function onLogout() {
+  await auth.logout()
+  router.push({ name: 'login' })
+}
 </script>
 
 <template>
-  <div class="min-h-screen flex flex-col">
-    <header class="h-14 border-b flex items-center justify-between px-4 bg-white">
-      <span class="font-semibold text-lg">morg</span>
-      <div class="flex items-center gap-3">
-        <span class="text-sm text-gray-500">{{ auth.userEmail }}</span>
-        <button
-          class="text-sm text-gray-600 hover:text-gray-900 cursor-pointer"
-          @click="auth.logout()"
-        >
+  <div class="min-h-screen flex flex-col bg-white">
+    <!-- ヘッダー -->
+    <header class="h-14 border-b flex items-center gap-4 px-4 flex-shrink-0">
+      <span class="font-bold text-lg w-40">morg</span>
+
+      <!-- 検索バー -->
+      <form class="flex-1 max-w-2xl" @submit.prevent="onSearch">
+        <div class="flex gap-2">
+          <input
+            v-model="searchInput"
+            type="text"
+            placeholder="検索（例: from:someone@gmail.com）"
+            class="flex-1 border rounded-lg px-3 py-1.5 text-sm outline-none focus:ring-2 focus:ring-blue-400"
+          />
+          <button
+            type="submit"
+            class="px-3 py-1.5 bg-blue-500 text-white text-sm rounded-lg hover:bg-blue-600 cursor-pointer"
+          >
+            検索
+          </button>
+        </div>
+      </form>
+
+      <div class="flex items-center gap-3 ml-auto">
+        <span class="text-xs text-gray-500">{{ auth.userEmail }}</span>
+        <button class="text-sm text-gray-500 hover:text-gray-800 cursor-pointer" @click="onLogout">
           ログアウト
         </button>
       </div>
     </header>
-    <main class="flex flex-1">
-      <aside class="w-56 border-r p-4 bg-white">
-        <p class="text-xs font-medium text-gray-400 uppercase tracking-wide mb-2">Labels</p>
-        <p class="text-sm text-gray-400 italic">（実装予定）</p>
+
+    <div class="flex flex-1 overflow-hidden">
+      <!-- サイドバー -->
+      <aside class="w-44 border-r flex-shrink-0 py-3">
+        <button
+          class="w-full text-left px-4 py-2 text-sm rounded-lg mx-1 hover:bg-gray-100 cursor-pointer"
+          :class="query === 'in:inbox' ? 'bg-blue-50 text-blue-700 font-medium' : 'text-gray-700'"
+          @click="query = 'in:inbox'; searchInput = ''"
+        >
+          受信トレイ
+        </button>
+        <button
+          class="w-full text-left px-4 py-2 text-sm rounded-lg mx-1 hover:bg-gray-100 cursor-pointer"
+          :class="query === 'is:unread' ? 'bg-blue-50 text-blue-700 font-medium' : 'text-gray-700'"
+          @click="query = 'is:unread'; searchInput = ''"
+        >
+          未読
+        </button>
+        <button
+          class="w-full text-left px-4 py-2 text-sm rounded-lg mx-1 hover:bg-gray-100 cursor-pointer"
+          :class="query === 'in:sent' ? 'bg-blue-50 text-blue-700 font-medium' : 'text-gray-700'"
+          @click="query = 'in:sent'; searchInput = ''"
+        >
+          送信済み
+        </button>
       </aside>
-      <section class="flex-1 p-6">
-        <p class="text-gray-400 text-sm">スレッド一覧（実装予定）</p>
-      </section>
-    </main>
+
+      <!-- スレッドリスト -->
+      <main class="flex-1 overflow-hidden">
+        <ThreadList :query="query" @select="onSelect" />
+      </main>
+    </div>
   </div>
 </template>
