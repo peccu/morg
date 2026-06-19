@@ -8,7 +8,7 @@ export const useAuthStore = defineStore('auth', () => {
 
   async function checkAuth() {
     try {
-      const res = await fetch('/api/auth/status')
+      const res = await fetch('/.netlify/functions/auth-status')
       const data = await res.json()
       isAuthenticated.value = data.authenticated
       userEmail.value = data.email ?? null
