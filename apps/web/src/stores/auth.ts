@@ -4,6 +4,7 @@ import { ref } from 'vue'
 export const useAuthStore = defineStore('auth', () => {
   const isAuthenticated = ref(false)
   const userEmail = ref<string | null>(null)
+  const initialized = ref(false)
 
   async function checkAuth() {
     try {
@@ -14,6 +15,8 @@ export const useAuthStore = defineStore('auth', () => {
     } catch {
       isAuthenticated.value = false
       userEmail.value = null
+    } finally {
+      initialized.value = true
     }
   }
 
@@ -27,5 +30,5 @@ export const useAuthStore = defineStore('auth', () => {
     userEmail.value = null
   }
 
-  return { isAuthenticated, userEmail, checkAuth, login, logout }
+  return { isAuthenticated, initialized, userEmail, checkAuth, login, logout }
 })
