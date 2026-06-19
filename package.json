@@ -11,6 +11,9 @@
     "build:all": "bun run build:functions && bun run build:web",
     "build:web": "bun run --cwd apps/web build",
     "build:functions": "bun build packages/functions/src/auth-google.ts packages/functions/src/auth-callback.ts packages/functions/src/auth-logout.ts packages/functions/src/auth-status.ts --target=node --outdir=netlify/functions --format=esm",
+    "test": "bun run test:functions && bun run test:web",
+    "test:functions": "bun run --cwd packages/functions test",
+    "test:web": "bun run --cwd apps/web test",
     "typecheck": "bun run --cwd apps/web typecheck && bun run --cwd packages/functions typecheck"
   }
 }
