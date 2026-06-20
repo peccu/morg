@@ -61,10 +61,11 @@ function header(headers: GmailMessageHeader[], name: string): string {
             </div>
 
             <!-- メッセージ本文 -->
-            <div class="px-4 py-4">
+            <div class="px-4 py-4 overflow-x-auto">
               <div
                 v-if="msg.payload"
-                class="prose prose-sm max-w-none text-gray-800"
+                class="mail-body min-w-0 text-sm text-gray-800 max-w-full"
+                style="word-break: break-word; overflow-wrap: break-word;"
                 v-html="extractBody(msg.payload as GmailMessagePart).html || msg.snippet"
               />
             </div>

@@ -62,4 +62,15 @@
   .safe-bottom {
     padding-bottom: max(0.5rem, env(safe-area-inset-bottom));
   }
+
+  /* HTMLメール内の要素がはみ出ないよう制限 */
+  .mail-body img,
+  .mail-body table {
+    max-width: 100%;
+    height: auto;
+  }
+  .mail-body * {
+    max-width: 100%;
+    box-sizing: border-box;
+  }
 }

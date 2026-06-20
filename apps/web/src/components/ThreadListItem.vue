@@ -27,38 +27,44 @@ function senderName(from: string): string {
 
 <template>
   <div
-    class="flex items-start gap-3 px-4 py-3 border-b cursor-pointer hover:bg-gray-50 transition-colors"
-    :class="{
-      'bg-blue-50 hover:bg-blue-50': selected,
-      'font-semibold': thread.unread,
-    }"
-    @click="$emit('click')"
+    class="flex items-stretch border-b transition-colors"
+    :class="checked ? 'bg-blue-50' : selected ? 'bg-blue-50' : 'hover:bg-gray-50'"
   >
-    <!-- チェックボックス / 未読インジケーター -->
-    <div class="mt-1 flex-shrink-0 w-5 h-5 flex items-center justify-center">
-      <input
-        v-if="checked || selected"
-        type="checkbox"
-        :checked="checked"
-        class="w-4 h-4 cursor-pointer"
-        @click.stop="$emit('check', thread.threadId)"
-      />
+    <!-- チェック領域：タップしやすい広いエリア -->
+    <button
+      class="flex items-center justify-center w-12 flex-shrink-0 cursor-pointer"
+      :aria-label="checked ? '選択解除' : '選択'"
+      @click.stop="$emit('check', thread.threadId)"
+    >
+      <div
+        v-if="checked"
+        class="w-5 h-5 rounded bg-blue-500 flex items-center justify-center"
+      >
+        <svg class="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+        </svg>
+      </div>
       <div
         v-else
-        class="w-2 h-2 rounded-full"
-        :class="thread.unread ? 'bg-blue-500' : 'bg-transparent'"
-        @click.stop="$emit('check', thread.threadId)"
-      />
-    </div>
+        class="w-5 h-5 rounded border-2 flex items-center justify-center"
+        :class="thread.unread ? 'border-blue-400 bg-blue-50' : 'border-gray-300'"
+      >
+        <div v-if="thread.unread" class="w-2 h-2 rounded-full bg-blue-500" />
+      </div>
+    </button>
 
-    <div class="flex-1 min-w-0">
+    <!-- メール情報：タップでスレッド開く -->
+    <div
+      class="flex-1 min-w-0 py-3 pr-4 cursor-pointer"
+      @click="$emit('click')"
+    >
       <div class="flex items-baseline justify-between gap-2">
-        <span class="text-sm truncate" :class="thread.unread ? 'text-gray-900' : 'text-gray-700'">
+        <span class="text-sm truncate" :class="thread.unread ? 'font-semibold text-gray-900' : 'text-gray-700'">
           {{ senderName(thread.from) || '(送信者不明)' }}
         </span>
         <span class="text-xs text-gray-400 flex-shrink-0">{{ formatDate(thread.date) }}</span>
       </div>
-      <p class="text-sm truncate mt-0.5" :class="thread.unread ? 'text-gray-900' : 'text-gray-600'">
+      <p class="text-sm truncate mt-0.5" :class="thread.unread ? 'font-medium text-gray-900' : 'text-gray-600'">
         {{ thread.subject }}
       </p>
       <p class="text-xs text-gray-400 truncate mt-0.5">{{ thread.snippet }}</p>
