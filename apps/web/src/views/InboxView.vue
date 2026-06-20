@@ -86,6 +86,7 @@ function toggleCheck(id: string) {
   next.has(id) ? next.delete(id) : next.add(id)
   checkedIds.value = next
 }
+function selectAll(ids: string[]) { checkedIds.value = new Set(ids) }
 function clearChecked() { checkedIds.value = new Set() }
 
 function onSelect(thread: ThreadListItem) {
@@ -208,6 +209,8 @@ async function onLogout() {
             :checked-ids="checkedIds"
             @select="onSelect"
             @check="toggleCheck"
+            @select-all="selectAll"
+            @clear-all="clearChecked"
             @load-more="fetchNextPage()"
           />
         </template>
