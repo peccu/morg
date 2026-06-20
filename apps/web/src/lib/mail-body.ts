@@ -11,6 +11,27 @@ function decodeBase64Url(data: string): string {
   )
 }
 
+function escapeHtml(s: string): string {
+  return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+}
+
+// テキストメール向け: URLをクリッカブルなリンクに変換しつつ残りをHTMLエスケープ
+function linkify(text: string): string {
+  const urlRegex = /https?:\/\/[^\s<>"[\]{}|\\^`]+/g
+  const parts: string[] = []
+  let last = 0
+  let match: RegExpExecArray | null
+  while ((match = urlRegex.exec(text)) !== null) {
+    parts.push(escapeHtml(text.slice(last, match.index)))
+    const url = match[0]
+    const safeUrl = escapeHtml(url).replace(/"/g, '&quot;')
+    parts.push(`<a href="${safeUrl}" target="_blank" rel="noopener noreferrer" class="text-blue-600 underline break-all">${safeUrl}</a>`)
+    last = match.index + url.length
+  }
+  parts.push(escapeHtml(text.slice(last)))
+  return parts.join('')
+}
+
 function extractPart(part: GmailMessagePart, mimeType: string): string | null {
   if (part.mimeType === mimeType && part.body.data) {
     return decodeBase64Url(part.body.data)
@@ -31,12 +52,7 @@ export function extractBody(payload: GmailMessagePart): { html: string; isHtml: 
   }
   const plain = extractPart(payload, 'text/plain')
   if (plain) {
-    const escaped = plain
-      .replace(/&/g, '&amp;')
-      .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;')
-      .replace(/\n/g, '<br>')
-    return { html: escaped, isHtml: false }
+    return { html: linkify(plain).replace(/\n/g, '<br>'), isHtml: false }
   }
   return { html: '', isHtml: false }
 }

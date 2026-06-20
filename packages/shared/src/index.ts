@@ -73,6 +73,12 @@ export interface BatchOperationRequest {
   labelId?: string
 }
 
+export interface MessageOperationRequest {
+  messageIds: string[]
+  action: BatchAction
+  labelId?: string
+}
+
 // Auth types
 
 export interface AuthStatus {

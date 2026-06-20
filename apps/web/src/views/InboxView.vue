@@ -60,20 +60,28 @@ const navTabs = [
 function setBaseQuery(q: string) {
   baseQuery.value = q
   searchInput.value = ''
+  activeSender.value = null
+  clearSenderQuery()
   clearChecked()
 }
 
 function onSearch() {
   baseQuery.value = searchInput.value.trim() || 'in:inbox'
   activeSender.value = null
+  clearSenderQuery()
   clearChecked()
   spTab.value = 'list'
+}
+
+function clearSenderQuery() {
+  if (route.query.sender) router.replace({ query: {} })
 }
 
 function onSenderSelect(address: string | null) {
   activeSender.value = address
   clearChecked()
-  if (address) spTab.value = 'list'
+  if (!address) clearSenderQuery()
+  else spTab.value = 'list'
 }
 
 function onLabelSelect(q: string) {

@@ -73,7 +73,7 @@ const userLabels = () => props.labels.filter((l) => l.type === 'user')
 
       <div
         v-if="showLabelMenu"
-        class="absolute left-0 top-full mt-1 z-50 bg-white border rounded shadow-lg min-w-36 py-1"
+        class="absolute right-0 top-full mt-1 z-50 bg-white border rounded shadow-lg min-w-36 py-1"
       >
         <button
           v-for="l in userLabels()"
