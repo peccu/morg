@@ -193,9 +193,12 @@ async function onLogout() {
         </div>
 
         <!-- アクティブフィルタ表示 -->
-        <div v-if="activeSender" class="flex items-center gap-1 px-2 py-1 bg-blue-50 border-b text-xs flex-shrink-0">
+        <div v-if="activeSender" class="flex items-center gap-2 px-3 py-2.5 bg-blue-50 border-b text-sm flex-shrink-0">
           <span class="text-blue-700 truncate">送信者: {{ activeSender }}</span>
-          <button class="ml-auto text-gray-400 cursor-pointer flex-shrink-0" @click="activeSender = null">✕</button>
+          <button
+            class="ml-auto flex-shrink-0 w-8 h-8 flex items-center justify-center rounded-full text-gray-400 hover:bg-blue-100 hover:text-gray-700 cursor-pointer text-base"
+            @click="activeSender = null"
+          >✕</button>
         </div>
 
         <template v-if="spTab === 'list' || activeSender">
