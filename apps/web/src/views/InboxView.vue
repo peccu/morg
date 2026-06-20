@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, defineComponent, h } from 'vue'
+import { ref, computed, watch, defineComponent, h } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { useThreads } from '@/composables/useThreads'
@@ -47,6 +47,20 @@ const query = computed(() =>
 // ──────── データ取得 ────────
 const { data, isFetching, isError, error, fetchNextPage, hasNextPage } = useThreads(query)
 const { data: labels } = useLabels()
+
+// ──────── 自動取得 ────────
+const autoFetchStopped = ref(false)
+
+// クエリが変わったら自動取得を再開
+watch(query, () => { autoFetchStopped.value = false })
+
+// 次ページがあり、取得中でなく、停止していなければ自動で次ページを取得
+watch(
+  [hasNextPage, isFetching, autoFetchStopped],
+  ([hasNext, fetching, stopped]) => {
+    if (hasNext && !fetching && !stopped) fetchNextPage()
+  },
+)
 
 const threads = computed<ThreadListItem[]>(() =>
   data.value?.pages.flatMap((p) => p.threads) ?? [],
@@ -230,11 +244,13 @@ async function onLogout() {
             :error="(error as Error | null)"
             :has-next-page="!!hasNextPage"
             :checked-ids="checkedIds"
+            :auto-fetch-stopped="autoFetchStopped"
             @select="onSelect"
             @check="toggleCheck"
             @select-all="selectAll"
             @clear-all="clearChecked"
-            @load-more="fetchNextPage()"
+            @load-more="autoFetchStopped = false"
+            @stop-fetch="autoFetchStopped = true"
           />
         </template>
       </main>

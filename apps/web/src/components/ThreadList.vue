@@ -10,11 +10,13 @@ const props = defineProps<{
   error: Error | null
   hasNextPage: boolean
   checkedIds: Set<string>
+  autoFetchStopped: boolean
 }>()
 const emit = defineEmits<{
   select: [thread: TThreadListItem]
   check: [id: string]
   loadMore: []
+  stopFetch: []
   selectAll: [ids: string[]]
   clearAll: []
 }>()
@@ -62,8 +64,9 @@ function select(thread: TThreadListItem) {
         <span>全て選択</span>
       </button>
 
-      <span v-if="checkedIds.size > 0" class="text-gray-400 text-xs">
-        {{ checkedIds.size }} / {{ threads.length }} 件選択中
+      <span class="text-xs text-gray-400">
+        {{ threads.length }}件
+        <template v-if="checkedIds.size > 0">中 {{ checkedIds.size }}件選択中</template>
       </span>
 
       <button
@@ -99,14 +102,32 @@ function select(thread: TThreadListItem) {
           @click="select(thread)"
           @check="emit('check', $event)"
         />
-        <div v-if="hasNextPage" class="p-4 text-center">
+        <!-- 自動取得中 -->
+        <div v-if="hasNextPage && !autoFetchStopped" class="flex items-center gap-3 px-4 py-3 border-t text-sm text-gray-500">
+          <svg class="w-4 h-4 animate-spin text-blue-500 flex-shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
+          </svg>
+          <span class="flex-1">取得中... ({{ threads.length }}件)</span>
           <button
-            class="text-sm text-blue-500 hover:text-blue-700 disabled:opacity-50 cursor-pointer min-h-[44px] px-4 flex items-center mx-auto"
+            class="px-3 min-h-[44px] flex items-center text-sm text-gray-500 hover:text-gray-800 border rounded cursor-pointer"
+            @click="emit('stopFetch')"
+          >止める</button>
+        </div>
+
+        <!-- 停止中・手動続き読み込み -->
+        <div v-else-if="hasNextPage && autoFetchStopped" class="flex items-center gap-3 px-4 py-3 border-t text-sm">
+          <span class="text-xs text-gray-400 flex-1">{{ threads.length }}件読み込み済み</span>
+          <button
+            class="px-3 min-h-[44px] flex items-center text-sm text-blue-500 hover:text-blue-700 border rounded cursor-pointer"
             :disabled="isFetching"
             @click="emit('loadMore')"
-          >
-            {{ isFetching ? '読み込み中...' : 'もっと読む' }}
-          </button>
+          >{{ isFetching ? '読み込み中...' : '続きを取得' }}</button>
+        </div>
+
+        <!-- 全件読み込み完了 -->
+        <div v-else-if="!hasNextPage && threads.length > 0" class="py-3 text-center text-xs text-gray-400 border-t">
+          全{{ threads.length }}件
         </div>
       </template>
     </div>
