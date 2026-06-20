@@ -1,52 +1,87 @@
 <script setup lang="ts">
+import { ref } from 'vue'
 import { useBulkAction } from '@/composables/useBulkAction'
 import type { BatchAction } from '@morg/shared'
+import type { LabelItem } from '@/composables/useLabels'
 
-const props = defineProps<{ selectedIds: string[] }>()
+const props = defineProps<{ selectedIds: string[]; labels: LabelItem[] }>()
 const emit = defineEmits<{ clear: [] }>()
 
 const { execute, isProcessing } = useBulkAction()
+const showLabelMenu = ref(false)
 
-async function run(action: BatchAction) {
-  await execute(props.selectedIds, action)
+async function run(action: BatchAction, labelId?: string) {
+  await execute(props.selectedIds, action, labelId)
+  showLabelMenu.value = false
   emit('clear')
 }
+
+const userLabels = () => props.labels.filter((l) => l.type === 'user')
 </script>
 
 <template>
   <div
     v-if="selectedIds.length > 0"
-    class="flex items-center gap-2 px-4 py-2 bg-blue-50 border-b text-sm flex-shrink-0"
+    class="flex items-center gap-1 px-2 py-1.5 bg-blue-50 border-b text-sm flex-shrink-0 flex-wrap relative"
   >
-    <span class="text-blue-700 font-medium mr-1">{{ selectedIds.length }}件選択</span>
+    <span class="text-blue-700 font-medium text-xs mr-0.5">{{ selectedIds.length }}件</span>
 
     <button
       :disabled="isProcessing"
-      class="px-3 py-1 rounded bg-white border hover:bg-gray-50 disabled:opacity-50 cursor-pointer"
+      class="px-2 py-1 text-xs rounded bg-white border hover:bg-gray-50 disabled:opacity-50 cursor-pointer"
       @click="run('archive')"
     >アーカイブ</button>
 
     <button
       :disabled="isProcessing"
-      class="px-3 py-1 rounded bg-white border hover:bg-gray-50 disabled:opacity-50 cursor-pointer"
+      class="px-2 py-1 text-xs rounded bg-white border hover:bg-gray-50 disabled:opacity-50 cursor-pointer"
       @click="run('trash')"
     >削除</button>
 
     <button
       :disabled="isProcessing"
-      class="px-3 py-1 rounded bg-white border hover:bg-gray-50 disabled:opacity-50 cursor-pointer"
+      class="px-2 py-1 text-xs rounded bg-white border hover:bg-gray-50 disabled:opacity-50 cursor-pointer"
       @click="run('markRead')"
     >既読</button>
 
     <button
       :disabled="isProcessing"
-      class="px-3 py-1 rounded bg-white border hover:bg-gray-50 disabled:opacity-50 cursor-pointer"
+      class="px-2 py-1 text-xs rounded bg-white border hover:bg-gray-50 disabled:opacity-50 cursor-pointer"
       @click="run('markUnread')"
     >未読</button>
 
+    <!-- ラベル追加ドロップダウン -->
+    <div class="relative">
+      <button
+        :disabled="isProcessing || userLabels().length === 0"
+        class="px-2 py-1 text-xs rounded bg-white border hover:bg-gray-50 disabled:opacity-50 cursor-pointer"
+        @click="showLabelMenu = !showLabelMenu"
+      >ラベル ▾</button>
+
+      <div
+        v-if="showLabelMenu"
+        class="absolute left-0 top-full mt-1 z-50 bg-white border rounded shadow-lg min-w-32 py-1"
+      >
+        <button
+          v-for="l in userLabels()"
+          :key="l.id"
+          class="w-full text-left px-3 py-2 text-xs hover:bg-gray-50 cursor-pointer"
+          @click="run('addLabel', l.id)"
+        >{{ l.name }}</button>
+      </div>
+    </div>
+
+    <!-- 閉じるボタン -->
     <button
-      class="ml-auto text-gray-400 hover:text-gray-600 cursor-pointer"
-      @click="emit('clear')"
+      class="ml-auto text-gray-400 hover:text-gray-600 cursor-pointer text-base leading-none"
+      @click="showLabelMenu = false; emit('clear')"
     >✕</button>
   </div>
+
+  <!-- ドロップダウン外クリックで閉じる -->
+  <div
+    v-if="showLabelMenu"
+    class="fixed inset-0 z-40"
+    @click="showLabelMenu = false"
+  />
 </template>

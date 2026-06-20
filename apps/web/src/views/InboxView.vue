@@ -4,19 +4,19 @@ import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { useThreads } from '@/composables/useThreads'
 import { useSenders } from '@/composables/useSenders'
+import { useLabels } from '@/composables/useLabels'
 import ThreadList from '@/components/ThreadList.vue'
 import BulkActionBar from '@/components/BulkActionBar.vue'
 import SenderPanel from '@/components/SenderPanel.vue'
 import type { ThreadListItem } from '@morg/shared'
 
-// ──────── インラインコンポーネント ────────
 const SidebarItem = defineComponent({
   props: { label: String, active: Boolean },
   emits: ['click'],
   setup(props, { emit }) {
     return () => h('button', {
       class: [
-        'w-full text-left px-4 py-2 text-sm rounded-lg hover:bg-gray-100 cursor-pointer',
+        'w-full text-left px-2 py-1.5 text-sm rounded hover:bg-gray-100 cursor-pointer',
         props.active ? 'bg-blue-50 text-blue-700 font-medium' : 'text-gray-700',
       ],
       onClick: () => emit('click'),
@@ -28,20 +28,20 @@ const SidebarItem = defineComponent({
 const auth   = useAuthStore()
 const router = useRouter()
 
-const baseQuery    = ref('in:inbox')    // 受信/未読/送信済み/検索
+const baseQuery    = ref('in:inbox')
 const activeSender = ref<string | null>(null)
 const searchInput  = ref('')
 const checkedIds   = ref(new Set<string>())
-type SpTab = 'list' | 'senders'
+type SpTab = 'list' | 'senders' | 'labels'
 const spTab        = ref<SpTab>('list')
 
-// sender選択時は from: クエリを合成
 const query = computed(() =>
   activeSender.value ? `from:${activeSender.value} ${baseQuery.value}`.trim() : baseQuery.value,
 )
 
 // ──────── データ取得 ────────
 const { data, isFetching, isError, error, fetchNextPage, hasNextPage } = useThreads(query)
+const { data: labels } = useLabels()
 
 const threads = computed<ThreadListItem[]>(() =>
   data.value?.pages.flatMap((p) => p.threads) ?? [],
@@ -53,7 +53,7 @@ const senders = useSenders(() => threads.value)
 const navTabs = [
   { label: '受信', q: 'in:inbox' },
   { label: '未読', q: 'is:unread' },
-  { label: '送信済み', q: 'in:sent' },
+  { label: '送信', q: 'in:sent' },
 ]
 
 function setBaseQuery(q: string) {
@@ -73,6 +73,12 @@ function onSenderSelect(address: string | null) {
   activeSender.value = address
   clearChecked()
   if (address) spTab.value = 'list'
+}
+
+function onLabelSelect(q: string) {
+  setBaseQuery(q)
+  activeSender.value = null
+  spTab.value = 'list'
 }
 
 function toggleCheck(id: string) {
@@ -95,55 +101,61 @@ async function onLogout() {
 <template>
   <div class="h-screen flex flex-col bg-white overflow-hidden">
     <!-- ヘッダー -->
-    <header class="border-b flex items-center gap-2 px-3 py-2 flex-shrink-0 safe-top">
-      <span class="font-bold text-base w-12 flex-shrink-0">morg</span>
+    <header class="border-b flex items-center gap-1.5 px-2 py-1.5 flex-shrink-0 safe-top">
+      <span class="font-bold text-sm w-10 flex-shrink-0">morg</span>
 
       <form class="flex-1" @submit.prevent="onSearch">
-        <div class="flex gap-1.5">
+        <div class="flex gap-1">
           <input
             v-model="searchInput"
             type="search"
             placeholder="検索..."
-            class="flex-1 border rounded-lg px-3 py-1.5 text-sm outline-none focus:ring-2 focus:ring-blue-400 min-w-0"
+            class="flex-1 border rounded px-2 py-1 text-sm outline-none focus:ring-1 focus:ring-blue-400 min-w-0"
           />
-          <button type="submit" class="px-3 py-1.5 bg-blue-500 text-white text-sm rounded-lg hover:bg-blue-600 cursor-pointer flex-shrink-0">
+          <button type="submit" class="px-2 py-1 bg-blue-500 text-white text-xs rounded hover:bg-blue-600 cursor-pointer flex-shrink-0">
             検索
           </button>
         </div>
       </form>
 
-      <button class="text-xs text-gray-400 hover:text-gray-700 cursor-pointer flex-shrink-0" @click="onLogout">
+      <button class="text-xs text-gray-400 hover:text-gray-700 cursor-pointer flex-shrink-0 px-1" @click="onLogout">
         ログアウト
       </button>
     </header>
 
     <div class="flex flex-1 overflow-hidden">
-      <!-- PC サイドバー（フォルダ） -->
-      <aside class="hidden md:flex flex-col w-40 border-r flex-shrink-0 pt-3 gap-0.5 px-2">
+      <!-- PC サイドバー（フォルダ＋ラベル） -->
+      <aside class="hidden md:flex flex-col w-36 border-r flex-shrink-0 overflow-y-auto px-1 py-1 gap-0.5">
         <SidebarItem
           v-for="t in navTabs" :key="t.q"
           :label="t.label"
           :active="baseQuery === t.q && !activeSender"
           @click="setBaseQuery(t.q); activeSender = null"
         />
+
+        <template v-if="labels?.length">
+          <div class="mt-2 px-2 text-xs font-semibold text-gray-400 uppercase tracking-wide">ラベル</div>
+          <SidebarItem
+            v-for="l in labels" :key="l.id"
+            :label="l.name"
+            :active="baseQuery === l.query && !activeSender"
+            @click="onLabelSelect(l.query)"
+          />
+        </template>
       </aside>
 
       <!-- PC 送信者パネル -->
-      <div class="hidden md:flex flex-col w-56 border-r flex-shrink-0 overflow-hidden">
-        <SenderPanel
-          :senders="senders"
-          :active-sender="activeSender"
-          @select="onSenderSelect"
-        />
+      <div class="hidden md:flex flex-col w-52 border-r flex-shrink-0 overflow-hidden">
+        <SenderPanel :senders="senders" :active-sender="activeSender" @select="onSenderSelect" />
       </div>
 
       <!-- スレッドリスト本体 -->
       <main class="flex-1 overflow-hidden flex flex-col">
         <!-- SP タブ -->
-        <div class="flex md:hidden border-b text-sm">
+        <div class="flex md:hidden border-b text-xs">
           <button
             v-for="t in navTabs" :key="t.q"
-            class="flex-1 py-2 font-medium cursor-pointer truncate px-1"
+            class="flex-1 py-2 font-medium cursor-pointer"
             :class="baseQuery === t.q && spTab === 'list' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-500'"
             @click="setBaseQuery(t.q); spTab = 'list'"
           >{{ t.label }}</button>
@@ -152,25 +164,41 @@ async function onLogout() {
             :class="spTab === 'senders' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-500'"
             @click="spTab = 'senders'"
           >送信者</button>
+          <button
+            class="flex-1 py-2 font-medium cursor-pointer"
+            :class="spTab === 'labels' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-500'"
+            @click="spTab = 'labels'"
+          >ラベル</button>
         </div>
 
         <!-- SP 送信者パネル -->
         <div v-if="spTab === 'senders'" class="flex-1 overflow-hidden md:hidden">
-          <SenderPanel
-            :senders="senders"
-            :active-sender="activeSender"
-            @select="onSenderSelect"
-          />
+          <SenderPanel :senders="senders" :active-sender="activeSender" @select="onSenderSelect" />
         </div>
 
-        <!-- 選択中フィルタ表示 -->
-        <div v-if="activeSender" class="flex items-center gap-2 px-3 py-1.5 bg-blue-50 border-b text-xs flex-shrink-0">
-          <span class="text-blue-700">送信者: {{ activeSender }}</span>
-          <button class="ml-auto text-gray-400 hover:text-gray-600 cursor-pointer" @click="activeSender = null">✕</button>
+        <!-- SP ラベルパネル -->
+        <div v-else-if="spTab === 'labels'" class="flex-1 overflow-y-auto md:hidden">
+          <div
+            v-for="l in labels" :key="l.id"
+            class="flex items-center px-3 py-3 border-b cursor-pointer hover:bg-gray-50"
+            :class="baseQuery === l.query ? 'bg-blue-50' : ''"
+            @click="onLabelSelect(l.query)"
+          >
+            <span class="text-sm" :class="l.type === 'user' ? 'text-gray-700' : 'text-gray-600'">
+              {{ l.name }}
+            </span>
+            <span v-if="l.type === 'user'" class="ml-auto text-xs text-gray-400">●</span>
+          </div>
+        </div>
+
+        <!-- アクティブフィルタ表示 -->
+        <div v-if="activeSender" class="flex items-center gap-1 px-2 py-1 bg-blue-50 border-b text-xs flex-shrink-0">
+          <span class="text-blue-700 truncate">送信者: {{ activeSender }}</span>
+          <button class="ml-auto text-gray-400 cursor-pointer flex-shrink-0" @click="activeSender = null">✕</button>
         </div>
 
         <template v-if="spTab === 'list' || activeSender">
-          <BulkActionBar :selected-ids="[...checkedIds]" @clear="clearChecked" />
+          <BulkActionBar :selected-ids="[...checkedIds]" :labels="labels ?? []" @clear="clearChecked" />
           <ThreadList
             :threads="threads"
             :is-fetching="isFetching"

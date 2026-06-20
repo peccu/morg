@@ -49,6 +49,7 @@ function select(thread: TThreadListItem) {
           :thread="thread"
           :selected="selectedId === thread.threadId"
           :checked="checkedIds.has(thread.threadId)"
+          :selection-mode="checkedIds.size > 0"
           @click="select(thread)"
           @check="emit('check', $event)"
         />

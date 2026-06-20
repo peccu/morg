@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { ThreadListItem } from '@morg/shared'
 
-const props = defineProps<{ thread: ThreadListItem; selected: boolean; checked: boolean }>()
+const props = defineProps<{ thread: ThreadListItem; selected: boolean; checked: boolean; selectionMode: boolean }>()
 defineEmits<{ click: []; check: [id: string] }>()
 
 function formatDate(raw: string): string {
@@ -53,10 +53,10 @@ function senderName(from: string): string {
       </div>
     </button>
 
-    <!-- メール情報：タップでスレッド開く -->
+    <!-- メール情報：選択中はチェック切替、通常はスレッド開く -->
     <div
       class="flex-1 min-w-0 py-3 pr-4 cursor-pointer"
-      @click="$emit('click')"
+      @click="selectionMode ? $emit('check', thread.threadId) : $emit('click')"
     >
       <div class="flex items-baseline justify-between gap-2">
         <span class="text-sm truncate" :class="thread.unread ? 'font-semibold text-gray-900' : 'text-gray-700'">
