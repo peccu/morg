@@ -24,6 +24,19 @@ const userLabels = () => props.labels.filter((l) => l.type === 'user')
     v-if="selectedIds.length > 0"
     class="flex items-center gap-1.5 px-2 bg-blue-50 border-b text-sm flex-shrink-0 flex-wrap relative min-h-[44px]"
   >
+    <!-- 処理中オーバーレイ -->
+    <div
+      v-if="isProcessing"
+      class="absolute inset-0 bg-blue-50/80 flex items-center justify-center gap-2 z-10"
+    >
+      <!-- スピナー -->
+      <svg class="w-4 h-4 animate-spin text-blue-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
+        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
+      </svg>
+      <span class="text-sm text-blue-700 font-medium">処理中...</span>
+    </div>
+
     <span class="text-blue-700 font-medium text-xs">{{ selectedIds.length }}件</span>
 
     <button
@@ -73,7 +86,8 @@ const userLabels = () => props.labels.filter((l) => l.type === 'user')
 
     <!-- 閉じるボタン -->
     <button
-      class="ml-auto w-11 h-11 flex items-center justify-center text-gray-400 hover:text-gray-600 cursor-pointer text-lg"
+      :disabled="isProcessing"
+      class="ml-auto w-11 h-11 flex items-center justify-center text-gray-400 hover:text-gray-600 cursor-pointer text-lg disabled:opacity-30"
       @click="showLabelMenu = false; emit('clear')"
     >✕</button>
   </div>
