@@ -100,7 +100,7 @@ async function onLogout() {
 </script>
 
 <template>
-  <div class="h-screen flex flex-col bg-white overflow-hidden">
+  <div class="h-dvh flex flex-col bg-white overflow-hidden">
     <!-- ヘッダー -->
     <header class="border-b flex items-center gap-1.5 px-2 flex-shrink-0 safe-top min-h-[44px]">
       <span class="font-bold text-sm w-10 flex-shrink-0">morg</span>
