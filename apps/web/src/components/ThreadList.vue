@@ -69,11 +69,24 @@ function select(thread: TThreadListItem) {
         <template v-if="checkedIds.size > 0">中 {{ checkedIds.size }}件選択中</template>
       </span>
 
-      <button
-        v-if="checkedIds.size > 0"
-        class="ml-auto min-h-[44px] px-3 text-gray-400 hover:text-gray-600 cursor-pointer text-sm flex items-center"
-        @click="emit('clearAll')"
-      >選択解除</button>
+      <!-- 右端固定エリア：取得状況 + 選択解除 -->
+      <div class="ml-auto flex items-center gap-1 flex-shrink-0">
+        <template v-if="hasNextPage && !autoFetchStopped">
+          <svg class="w-3.5 h-3.5 animate-spin text-blue-500 flex-shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
+          </svg>
+          <button
+            class="min-h-[44px] px-2.5 flex items-center text-sm text-gray-500 hover:text-gray-800 border rounded cursor-pointer"
+            @click="emit('stopFetch')"
+          >止める</button>
+        </template>
+        <button
+          v-if="checkedIds.size > 0"
+          class="min-h-[44px] px-3 text-gray-400 hover:text-gray-600 cursor-pointer text-sm flex items-center"
+          @click="emit('clearAll')"
+        >選択解除</button>
+      </div>
     </div>
 
     <!-- スレッド一覧 -->
@@ -102,22 +115,8 @@ function select(thread: TThreadListItem) {
           @click="select(thread)"
           @check="emit('check', $event)"
         />
-        <!-- 自動取得中 -->
-        <div v-if="hasNextPage && !autoFetchStopped" class="flex items-center gap-3 px-4 py-3 border-t text-sm text-gray-500">
-          <svg class="w-4 h-4 animate-spin text-blue-500 flex-shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
-            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
-          </svg>
-          <span class="flex-1">取得中... ({{ threads.length }}件)</span>
-          <button
-            class="px-3 min-h-[44px] flex items-center text-sm text-gray-500 hover:text-gray-800 border rounded cursor-pointer"
-            @click="emit('stopFetch')"
-          >止める</button>
-        </div>
-
         <!-- 停止中・手動続き読み込み -->
-        <div v-else-if="hasNextPage && autoFetchStopped" class="flex items-center gap-3 px-4 py-3 border-t text-sm">
-          <span class="text-xs text-gray-400 flex-1">{{ threads.length }}件読み込み済み</span>
+        <div v-if="hasNextPage && autoFetchStopped" class="flex items-center justify-end gap-3 px-4 py-3 border-t text-sm">
           <button
             class="px-3 min-h-[44px] flex items-center text-sm text-blue-500 hover:text-blue-700 border rounded cursor-pointer"
             :disabled="isFetching"
@@ -126,7 +125,7 @@ function select(thread: TThreadListItem) {
         </div>
 
         <!-- 全件読み込み完了 -->
-        <div v-else-if="!hasNextPage && threads.length > 0" class="py-3 text-center text-xs text-gray-400 border-t">
+        <div v-else-if="!hasNextPage" class="py-3 text-center text-xs text-gray-400 border-t">
           全{{ threads.length }}件
         </div>
       </template>
