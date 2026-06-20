@@ -22,31 +22,31 @@ const userLabels = () => props.labels.filter((l) => l.type === 'user')
 <template>
   <div
     v-if="selectedIds.length > 0"
-    class="flex items-center gap-1 px-2 py-1.5 bg-blue-50 border-b text-sm flex-shrink-0 flex-wrap relative"
+    class="flex items-center gap-1.5 px-2 bg-blue-50 border-b text-sm flex-shrink-0 flex-wrap relative min-h-[44px]"
   >
-    <span class="text-blue-700 font-medium text-xs mr-0.5">{{ selectedIds.length }}件</span>
+    <span class="text-blue-700 font-medium text-xs">{{ selectedIds.length }}件</span>
 
     <button
       :disabled="isProcessing"
-      class="px-2 py-1 text-xs rounded bg-white border hover:bg-gray-50 disabled:opacity-50 cursor-pointer"
+      class="px-3 min-h-[44px] flex items-center rounded bg-white border hover:bg-gray-50 disabled:opacity-50 cursor-pointer text-sm"
       @click="run('archive')"
     >アーカイブ</button>
 
     <button
       :disabled="isProcessing"
-      class="px-2 py-1 text-xs rounded bg-white border hover:bg-gray-50 disabled:opacity-50 cursor-pointer"
+      class="px-3 min-h-[44px] flex items-center rounded bg-white border hover:bg-gray-50 disabled:opacity-50 cursor-pointer text-sm"
       @click="run('trash')"
     >削除</button>
 
     <button
       :disabled="isProcessing"
-      class="px-2 py-1 text-xs rounded bg-white border hover:bg-gray-50 disabled:opacity-50 cursor-pointer"
+      class="px-3 min-h-[44px] flex items-center rounded bg-white border hover:bg-gray-50 disabled:opacity-50 cursor-pointer text-sm"
       @click="run('markRead')"
     >既読</button>
 
     <button
       :disabled="isProcessing"
-      class="px-2 py-1 text-xs rounded bg-white border hover:bg-gray-50 disabled:opacity-50 cursor-pointer"
+      class="px-3 min-h-[44px] flex items-center rounded bg-white border hover:bg-gray-50 disabled:opacity-50 cursor-pointer text-sm"
       @click="run('markUnread')"
     >未読</button>
 
@@ -54,18 +54,18 @@ const userLabels = () => props.labels.filter((l) => l.type === 'user')
     <div class="relative">
       <button
         :disabled="isProcessing || userLabels().length === 0"
-        class="px-2 py-1 text-xs rounded bg-white border hover:bg-gray-50 disabled:opacity-50 cursor-pointer"
+        class="px-3 min-h-[44px] flex items-center rounded bg-white border hover:bg-gray-50 disabled:opacity-50 cursor-pointer text-sm"
         @click="showLabelMenu = !showLabelMenu"
       >ラベル ▾</button>
 
       <div
         v-if="showLabelMenu"
-        class="absolute left-0 top-full mt-1 z-50 bg-white border rounded shadow-lg min-w-32 py-1"
+        class="absolute left-0 top-full mt-1 z-50 bg-white border rounded shadow-lg min-w-36 py-1"
       >
         <button
           v-for="l in userLabels()"
           :key="l.id"
-          class="w-full text-left px-3 py-2 text-xs hover:bg-gray-50 cursor-pointer"
+          class="w-full text-left px-4 min-h-[44px] flex items-center text-sm hover:bg-gray-50 cursor-pointer"
           @click="run('addLabel', l.id)"
         >{{ l.name }}</button>
       </div>
@@ -73,7 +73,7 @@ const userLabels = () => props.labels.filter((l) => l.type === 'user')
 
     <!-- 閉じるボタン -->
     <button
-      class="ml-auto text-gray-400 hover:text-gray-600 cursor-pointer text-base leading-none"
+      class="ml-auto w-11 h-11 flex items-center justify-center text-gray-400 hover:text-gray-600 cursor-pointer text-lg"
       @click="showLabelMenu = false; emit('clear')"
     >✕</button>
   </div>

@@ -102,7 +102,7 @@ async function onLogout() {
 <template>
   <div class="h-screen flex flex-col bg-white overflow-hidden">
     <!-- ヘッダー -->
-    <header class="border-b flex items-center gap-1.5 px-2 py-1.5 flex-shrink-0 safe-top">
+    <header class="border-b flex items-center gap-1.5 px-2 flex-shrink-0 safe-top min-h-[44px]">
       <span class="font-bold text-sm w-10 flex-shrink-0">morg</span>
 
       <form class="flex-1" @submit.prevent="onSearch">
@@ -111,17 +111,19 @@ async function onLogout() {
             v-model="searchInput"
             type="search"
             placeholder="検索..."
-            class="flex-1 border rounded px-2 py-1 text-sm outline-none focus:ring-1 focus:ring-blue-400 min-w-0"
+            class="flex-1 border rounded px-2 text-sm outline-none focus:ring-1 focus:ring-blue-400 min-w-0 min-h-[44px]"
           />
-          <button type="submit" class="px-2 py-1 bg-blue-500 text-white text-xs rounded hover:bg-blue-600 cursor-pointer flex-shrink-0">
-            検索
-          </button>
+          <button
+            type="submit"
+            class="px-3 bg-blue-500 text-white text-sm rounded hover:bg-blue-600 cursor-pointer flex-shrink-0 min-h-[44px]"
+          >検索</button>
         </div>
       </form>
 
-      <button class="text-xs text-gray-400 hover:text-gray-700 cursor-pointer flex-shrink-0 px-1" @click="onLogout">
-        ログアウト
-      </button>
+      <button
+        class="text-xs text-gray-400 hover:text-gray-700 cursor-pointer flex-shrink-0 px-2 min-h-[44px] flex items-center"
+        @click="onLogout"
+      >ログアウト</button>
     </header>
 
     <div class="flex flex-1 overflow-hidden">
@@ -152,21 +154,21 @@ async function onLogout() {
 
       <!-- スレッドリスト本体 -->
       <main class="flex-1 overflow-hidden flex flex-col">
-        <!-- SP タブ -->
-        <div class="flex md:hidden border-b text-xs">
+        <!-- SP タブ（min-h-[44px] で Apple HIG 準拠） -->
+        <div class="flex md:hidden border-b">
           <button
             v-for="t in navTabs" :key="t.q"
-            class="flex-1 py-2 font-medium cursor-pointer"
+            class="flex-1 min-h-[44px] flex items-center justify-center text-sm font-medium cursor-pointer"
             :class="baseQuery === t.q && spTab === 'list' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-500'"
             @click="setBaseQuery(t.q); spTab = 'list'"
           >{{ t.label }}</button>
           <button
-            class="flex-1 py-2 font-medium cursor-pointer"
+            class="flex-1 min-h-[44px] flex items-center justify-center text-sm font-medium cursor-pointer"
             :class="spTab === 'senders' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-500'"
             @click="spTab = 'senders'"
           >送信者</button>
           <button
-            class="flex-1 py-2 font-medium cursor-pointer"
+            class="flex-1 min-h-[44px] flex items-center justify-center text-sm font-medium cursor-pointer"
             :class="spTab === 'labels' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-500'"
             @click="spTab = 'labels'"
           >ラベル</button>
@@ -181,7 +183,7 @@ async function onLogout() {
         <div v-else-if="spTab === 'labels'" class="flex-1 overflow-y-auto md:hidden">
           <div
             v-for="l in labels" :key="l.id"
-            class="flex items-center px-3 py-3 border-b cursor-pointer hover:bg-gray-50"
+            class="flex items-center px-3 min-h-[44px] border-b cursor-pointer hover:bg-gray-50"
             :class="baseQuery === l.query ? 'bg-blue-50' : ''"
             @click="onLabelSelect(l.query)"
           >
@@ -193,10 +195,10 @@ async function onLogout() {
         </div>
 
         <!-- アクティブフィルタ表示 -->
-        <div v-if="activeSender" class="flex items-center gap-2 px-3 py-2.5 bg-blue-50 border-b text-sm flex-shrink-0">
+        <div v-if="activeSender" class="flex items-center gap-2 px-3 min-h-[44px] bg-blue-50 border-b text-sm flex-shrink-0">
           <span class="text-blue-700 truncate">送信者: {{ activeSender }}</span>
           <button
-            class="ml-auto flex-shrink-0 w-8 h-8 flex items-center justify-center rounded-full text-gray-400 hover:bg-blue-100 hover:text-gray-700 cursor-pointer text-base"
+            class="ml-auto flex-shrink-0 w-11 h-11 flex items-center justify-center rounded-full text-gray-400 hover:bg-blue-100 hover:text-gray-700 cursor-pointer text-base"
             @click="activeSender = null"
           >✕</button>
         </div>
