@@ -4,6 +4,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { useThread } from '@/composables/useThread'
 import { useBulkAction } from '@/composables/useBulkAction'
 import { useMessageAction } from '@/composables/useMessageAction'
+import { useLabels } from '@/composables/useLabels'
 import { extractBody } from '@/lib/mail-body'
 import type { BatchAction } from '@morg/shared'
 import type { GmailMessagePart, GmailMessageHeader } from '@morg/shared'
@@ -15,8 +16,37 @@ const { data: thread, isPending, isError } = useThread(id)
 
 // スレッド全体へのアクション
 const { execute: execThread, isProcessing: threadProcessing } = useBulkAction()
-// 選択メッセージへのアクション
 const { execute: execMsg, isProcessing: msgProcessing } = useMessageAction(() => id.value)
+const { data: labels } = useLabels()
+
+const LABEL_SKIP = new Set([
+  'UNREAD', 'CATEGORY_PERSONAL', 'CATEGORY_SOCIAL',
+  'CATEGORY_PROMOTIONS', 'CATEGORY_UPDATES', 'CATEGORY_FORUMS',
+])
+const LABEL_NAMES: Record<string, string> = {
+  INBOX: '受信', SENT: '送信済', DRAFT: '下書き',
+  STARRED: 'スター', IMPORTANT: '重要', SPAM: '迷惑', TRASH: 'ゴミ箱',
+}
+const LABEL_STYLE: Record<string, string> = {
+  INBOX:     'bg-blue-100 text-blue-700',
+  SENT:      'bg-green-100 text-green-700',
+  DRAFT:     'bg-orange-100 text-orange-700',
+  STARRED:   'bg-yellow-100 text-yellow-700',
+  IMPORTANT: 'bg-yellow-100 text-yellow-800',
+  SPAM:      'bg-red-100 text-red-700',
+  TRASH:     'bg-gray-200 text-gray-500',
+}
+
+function msgLabels(labelIds: string[]) {
+  const userMap = new Map(labels.value?.map((l) => [l.id, l.name]) ?? [])
+  return labelIds
+    .filter((id) => !LABEL_SKIP.has(id) && !id.startsWith('CATEGORY_'))
+    .map((id) => ({
+      id,
+      name: LABEL_NAMES[id] ?? userMap.get(id) ?? id,
+      style: LABEL_STYLE[id] ?? 'bg-purple-100 text-purple-700',
+    }))
+}
 
 const isProcessing = computed(() => threadProcessing.value || msgProcessing.value)
 
@@ -41,6 +71,17 @@ function parseEmail(from: string): string {
 function parseName(from: string): string {
   const m = from.match(/^(.+?)\s*</)
   return m ? m[1].trim().replace(/^"|"$/g, '') : from.trim()
+}
+function formatDate(raw: string): string {
+  if (!raw) return ''
+  const d = new Date(raw)
+  if (isNaN(d.getTime())) return raw
+  const now = new Date()
+  const sameYear = d.getFullYear() === now.getFullYear()
+  const sameDay = d.toDateString() === now.toDateString()
+  if (sameDay) return d.toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' })
+  if (sameYear) return d.toLocaleDateString('ja-JP', { month: 'numeric', day: 'numeric' })
+  return d.toLocaleDateString('ja-JP', { year: 'numeric', month: 'numeric', day: 'numeric' })
 }
 
 const firstFrom = computed(() =>
@@ -159,18 +200,24 @@ function goToSender() {
               </div>
 
               <div class="flex-1 min-w-0 py-2 pr-3">
-                <div class="flex items-start justify-between gap-3">
-                  <div class="min-w-0">
-                    <p class="text-sm font-medium text-gray-900 truncate">
-                      {{ header(msg.payload?.headers ?? [], 'From') }}
-                    </p>
-                    <p class="text-xs text-gray-500 mt-0.5 truncate">
-                      To: {{ header(msg.payload?.headers ?? [], 'To') }}
-                    </p>
-                  </div>
-                  <time class="text-xs text-gray-400 flex-shrink-0 mt-0.5">
-                    {{ header(msg.payload?.headers ?? [], 'Date') }}
+                <div class="flex items-baseline justify-between gap-2">
+                  <p class="text-sm font-medium text-gray-900 truncate min-w-0">
+                    {{ header(msg.payload?.headers ?? [], 'From') }}
+                  </p>
+                  <time class="text-xs text-gray-400 flex-shrink-0 whitespace-nowrap">
+                    {{ formatDate(header(msg.payload?.headers ?? [], 'Date')) }}
                   </time>
+                </div>
+                <p class="text-xs text-gray-500 mt-0.5 truncate">
+                  To: {{ header(msg.payload?.headers ?? [], 'To') }}
+                </p>
+                <div v-if="msgLabels(msg.labelIds ?? []).length" class="flex flex-wrap gap-1 mt-1.5">
+                  <span
+                    v-for="label in msgLabels(msg.labelIds ?? [])"
+                    :key="label.id"
+                    class="text-xs px-1.5 py-0.5 rounded-full"
+                    :class="label.style"
+                  >{{ label.name }}</span>
                 </div>
               </div>
             </div>

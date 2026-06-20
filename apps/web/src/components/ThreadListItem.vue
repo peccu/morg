@@ -1,8 +1,12 @@
 <script setup lang="ts">
+import { computed } from 'vue'
 import type { ThreadListItem } from '@morg/shared'
+import { useLabels } from '@/composables/useLabels'
 
 const props = defineProps<{ thread: ThreadListItem; selected: boolean; checked: boolean; selectionMode: boolean }>()
 defineEmits<{ click: []; check: [id: string] }>()
+
+const { data: labels } = useLabels()
 
 function formatDate(raw: string): string {
   if (!raw) return ''
@@ -23,6 +27,36 @@ function senderName(from: string): string {
   const match = from.match(/^(.+?)\s*</)
   return match ? match[1].trim().replace(/^"|"$/g, '') : from
 }
+
+const LABEL_SKIP = new Set([
+  'UNREAD', 'CATEGORY_PERSONAL', 'CATEGORY_SOCIAL',
+  'CATEGORY_PROMOTIONS', 'CATEGORY_UPDATES', 'CATEGORY_FORUMS',
+])
+const LABEL_NAMES: Record<string, string> = {
+  INBOX: '受信', SENT: '送信済', DRAFT: '下書き',
+  STARRED: 'スター', IMPORTANT: '重要', SPAM: '迷惑', TRASH: 'ゴミ箱',
+}
+const LABEL_STYLE: Record<string, string> = {
+  INBOX:     'bg-blue-100 text-blue-700',
+  SENT:      'bg-green-100 text-green-700',
+  DRAFT:     'bg-orange-100 text-orange-700',
+  STARRED:   'bg-yellow-100 text-yellow-700',
+  IMPORTANT: 'bg-yellow-100 text-yellow-800',
+  SPAM:      'bg-red-100 text-red-700',
+  TRASH:     'bg-gray-200 text-gray-500',
+}
+
+const displayLabels = computed(() => {
+  const userMap = new Map(labels.value?.map((l) => [l.id, l.name]) ?? [])
+  return props.thread.labelIds
+    .filter((id) => !LABEL_SKIP.has(id) && !id.startsWith('CATEGORY_'))
+    .map((id) => ({
+      id,
+      name: LABEL_NAMES[id] ?? userMap.get(id) ?? id,
+      style: LABEL_STYLE[id] ?? 'bg-purple-100 text-purple-700',
+    }))
+    .slice(0, 5)
+})
 </script>
 
 <template>
@@ -68,6 +102,14 @@ function senderName(from: string): string {
         {{ thread.subject }}
       </p>
       <p class="text-xs text-gray-400 truncate mt-0.5">{{ thread.snippet }}</p>
+      <div v-if="displayLabels.length" class="flex flex-wrap gap-1 mt-1">
+        <span
+          v-for="label in displayLabels"
+          :key="label.id"
+          class="text-xs px-1.5 py-0.5 rounded-full"
+          :class="label.style"
+        >{{ label.name }}</span>
+      </div>
     </div>
   </div>
 </template>

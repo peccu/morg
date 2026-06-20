@@ -40,7 +40,7 @@ const spTab = ref<SpTab>('list')
 
 const query = computed(() =>
   activeSender.value
-    ? `from:${activeSender.value} ${baseQuery.value}`.trim()
+    ? `from:${activeSender.value}`
     : baseQuery.value,
 )
 
