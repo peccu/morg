@@ -21,7 +21,8 @@ export function useMessageAction(threadId: () => string) {
         const body = await res.json().catch(() => ({})) as { error?: string }
         throw new Error(body.error ?? `HTTP ${res.status}`)
       }
-      await queryClient.invalidateQueries({ queryKey: ['thread', threadId()] })
+      // ['thread'] prefix match — Ref vs string の不一致を避けるため prefix で一括 invalidate
+      await queryClient.invalidateQueries({ queryKey: ['thread'] })
       await queryClient.invalidateQueries({ queryKey: ['threads'] })
     } catch (e) {
       error.value = e instanceof Error ? e.message : String(e)

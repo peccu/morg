@@ -13,6 +13,6 @@ export function useThread(id: Ref<string>) {
     queryKey: ['thread', id],
     queryFn: () => fetchThread(id.value),
     enabled: () => !!id.value,
-    staleTime: 1000 * 60 * 5,
+    staleTime: 0,
   })
 }

@@ -21,8 +21,8 @@ export function useBulkAction() {
         const body = await res.json().catch(() => ({})) as { error?: string }
         throw new Error(body.error ?? `HTTP ${res.status}`)
       }
-      // スレッド一覧キャッシュを全クリアして再取得
       await queryClient.invalidateQueries({ queryKey: ['threads'] })
+      await queryClient.invalidateQueries({ queryKey: ['thread'] })
     } catch (e) {
       error.value = e instanceof Error ? e.message : String(e)
     } finally {
