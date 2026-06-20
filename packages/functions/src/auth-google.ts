@@ -1,5 +1,5 @@
 import type { Handler } from '@netlify/functions'
-import { randomBytes } from 'node:crypto'
+import { randomBytes } from 'crypto'
 import { buildAuthUrl } from './lib/google-auth.js'
 
 export const handler: Handler = async (_event, _context) => {
