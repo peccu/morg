@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { ref, computed, defineComponent, h } from 'vue'
-import { useRouter } from 'vue-router'
+import { ref, computed, defineComponent, h, onMounted } from 'vue'
+import { useRouter, useRoute } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { useThreads } from '@/composables/useThreads'
 import { useSenders } from '@/composables/useSenders'
@@ -27,6 +27,7 @@ const SidebarItem = defineComponent({
 // ──────── 状態 ────────
 const auth   = useAuthStore()
 const router = useRouter()
+const route  = useRoute()
 
 const baseQuery    = ref('in:inbox')
 const activeSender = ref<string | null>(null)
@@ -92,6 +93,11 @@ function clearChecked() { checkedIds.value = new Set() }
 function onSelect(thread: ThreadListItem) {
   router.push({ name: 'thread', params: { id: thread.threadId } })
 }
+
+onMounted(() => {
+  const s = route.query.sender
+  if (typeof s === 'string' && s) activeSender.value = s
+})
 
 async function onLogout() {
   await auth.logout()
