@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, defineComponent, h, onMounted } from 'vue'
+import { ref, computed, defineComponent, h } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { useThreads } from '@/composables/useThreads'
@@ -24,20 +24,24 @@ const SidebarItem = defineComponent({
   },
 })
 
-// ──────── 状態 ────────
+// ──────── 状態（URLクエリパラメータが source of truth） ────────
 const auth   = useAuthStore()
 const router = useRouter()
 const route  = useRoute()
 
-const baseQuery    = ref('in:inbox')
-const activeSender = ref<string | null>(null)
-const searchInput  = ref('')
-const checkedIds   = ref(new Set<string>())
+// URL: ?q=in:inbox&sender=foo@bar.com
+const baseQuery    = computed(() => String(route.query.q   || 'in:inbox'))
+const activeSender = computed(() => typeof route.query.sender === 'string' ? route.query.sender : null)
+
+const searchInput = ref('')
+const checkedIds  = ref(new Set<string>())
 type SpTab = 'list' | 'senders' | 'labels'
-const spTab        = ref<SpTab>('list')
+const spTab = ref<SpTab>('list')
 
 const query = computed(() =>
-  activeSender.value ? `from:${activeSender.value} ${baseQuery.value}`.trim() : baseQuery.value,
+  activeSender.value
+    ? `from:${activeSender.value} ${baseQuery.value}`.trim()
+    : baseQuery.value,
 )
 
 // ──────── データ取得 ────────
@@ -47,10 +51,18 @@ const { data: labels } = useLabels()
 const threads = computed<ThreadListItem[]>(() =>
   data.value?.pages.flatMap((p) => p.threads) ?? [],
 )
-
 const senders = useSenders(() => threads.value)
 
-// ──────── ハンドラ ────────
+// ──────── URLを更新するヘルパー ────────
+// デフォルト値はパラメータを省略してURLをクリーンに保つ
+function replaceQuery(q: string, sender?: string | null) {
+  const query: Record<string, string> = {}
+  if (q && q !== 'in:inbox') query.q = q
+  if (sender) query.sender = sender
+  router.replace({ name: 'inbox', query })
+}
+
+// ──────── ナビゲーションハンドラ ────────
 const navTabs = [
   { label: '受信', q: 'in:inbox' },
   { label: '未読', q: 'is:unread' },
@@ -58,36 +70,32 @@ const navTabs = [
 ]
 
 function setBaseQuery(q: string) {
-  baseQuery.value = q
   searchInput.value = ''
-  activeSender.value = null
-  clearSenderQuery()
   clearChecked()
+  replaceQuery(q)
 }
 
 function onSearch() {
-  baseQuery.value = searchInput.value.trim() || 'in:inbox'
-  activeSender.value = null
-  clearSenderQuery()
+  const q = searchInput.value.trim() || 'in:inbox'
   clearChecked()
   spTab.value = 'list'
-}
-
-function clearSenderQuery() {
-  if (route.query.sender) router.replace({ query: {} })
+  replaceQuery(q)
 }
 
 function onSenderSelect(address: string | null) {
-  activeSender.value = address
   clearChecked()
-  if (!address) clearSenderQuery()
-  else spTab.value = 'list'
+  if (address) {
+    spTab.value = 'list'
+    replaceQuery(baseQuery.value, address)
+  } else {
+    replaceQuery(baseQuery.value)
+  }
 }
 
 function onLabelSelect(q: string) {
-  setBaseQuery(q)
-  activeSender.value = null
+  clearChecked()
   spTab.value = 'list'
+  replaceQuery(q)
 }
 
 function toggleCheck(id: string) {
@@ -101,11 +109,6 @@ function clearChecked() { checkedIds.value = new Set() }
 function onSelect(thread: ThreadListItem) {
   router.push({ name: 'thread', params: { id: thread.threadId } })
 }
-
-onMounted(() => {
-  const s = route.query.sender
-  if (typeof s === 'string' && s) activeSender.value = s
-})
 
 async function onLogout() {
   await auth.logout()
@@ -147,7 +150,7 @@ async function onLogout() {
           v-for="t in navTabs" :key="t.q"
           :label="t.label"
           :active="baseQuery === t.q && !activeSender"
-          @click="setBaseQuery(t.q); activeSender = null"
+          @click="setBaseQuery(t.q)"
         />
 
         <template v-if="labels?.length">
@@ -173,7 +176,7 @@ async function onLogout() {
           <button
             v-for="t in navTabs" :key="t.q"
             class="flex-1 min-h-[44px] flex items-center justify-center text-sm font-medium cursor-pointer"
-            :class="baseQuery === t.q && spTab === 'list' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-500'"
+            :class="baseQuery === t.q && spTab === 'list' && !activeSender ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-500'"
             @click="setBaseQuery(t.q); spTab = 'list'"
           >{{ t.label }}</button>
           <button
@@ -198,7 +201,7 @@ async function onLogout() {
           <div
             v-for="l in labels" :key="l.id"
             class="flex items-center px-3 min-h-[44px] border-b cursor-pointer hover:bg-gray-50"
-            :class="baseQuery === l.query ? 'bg-blue-50' : ''"
+            :class="baseQuery === l.query && !activeSender ? 'bg-blue-50' : ''"
             @click="onLabelSelect(l.query)"
           >
             <span class="text-sm" :class="l.type === 'user' ? 'text-gray-700' : 'text-gray-600'">
@@ -213,7 +216,7 @@ async function onLogout() {
           <span class="text-blue-700 truncate">送信者: {{ activeSender }}</span>
           <button
             class="ml-auto flex-shrink-0 w-11 h-11 flex items-center justify-center rounded-full text-gray-400 hover:bg-blue-100 hover:text-gray-700 cursor-pointer text-base"
-            @click="activeSender = null"
+            @click="onSenderSelect(null)"
           >✕</button>
         </div>
 
