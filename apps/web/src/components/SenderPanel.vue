@@ -10,11 +10,11 @@ const emit = defineEmits<{ select: [address: string | null] }>()
 
 <template>
   <div class="flex flex-col overflow-hidden">
-    <div class="px-3 py-2 border-b flex items-center justify-between">
+    <div class="px-3 border-b flex items-center justify-between min-h-[44px]">
       <span class="text-xs font-semibold text-gray-400 uppercase tracking-wide">送信者</span>
       <button
         v-if="activeSender"
-        class="text-xs text-blue-500 hover:text-blue-700 cursor-pointer"
+        class="text-sm text-blue-500 hover:text-blue-700 cursor-pointer min-h-[44px] px-3 flex items-center"
         @click="emit('select', null)"
       >クリア</button>
     </div>
