@@ -9,7 +9,7 @@ const emit = defineEmits<{ select: [address: string | null] }>()
 </script>
 
 <template>
-  <div class="flex flex-col h-full">
+  <div class="flex flex-col overflow-hidden">
     <div class="px-3 py-2 border-b flex items-center justify-between">
       <span class="text-xs font-semibold text-gray-400 uppercase tracking-wide">送信者</span>
       <button
@@ -19,7 +19,7 @@ const emit = defineEmits<{ select: [address: string | null] }>()
       >クリア</button>
     </div>
 
-    <div class="flex-1 overflow-y-auto">
+    <div class="flex-1 overflow-y-auto min-h-0">
       <div v-if="senders.length === 0" class="px-3 py-4 text-xs text-gray-400 italic">
         読み込み中...
       </div>

@@ -175,12 +175,12 @@ async function onLogout() {
         </div>
 
         <!-- SP 送信者パネル -->
-        <div v-if="spTab === 'senders'" class="flex-1 overflow-hidden md:hidden">
+        <div v-if="spTab === 'senders'" class="flex-1 min-h-0 overflow-hidden md:hidden">
           <SenderPanel :senders="senders" :active-sender="activeSender" @select="onSenderSelect" />
         </div>
 
         <!-- SP ラベルパネル -->
-        <div v-else-if="spTab === 'labels'" class="flex-1 overflow-y-auto md:hidden">
+        <div v-else-if="spTab === 'labels'" class="flex-1 min-h-0 overflow-y-auto md:hidden">
           <div
             v-for="l in labels" :key="l.id"
             class="flex items-center px-3 min-h-[44px] border-b cursor-pointer hover:bg-gray-50"
@@ -206,6 +206,7 @@ async function onLogout() {
         <template v-if="spTab === 'list' || activeSender">
           <BulkActionBar :selected-ids="[...checkedIds]" :labels="labels ?? []" @clear="clearChecked" />
           <ThreadList
+            class="flex-1 min-h-0"
             :threads="threads"
             :is-fetching="isFetching"
             :is-error="isError"
