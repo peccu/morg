@@ -10,7 +10,7 @@
     "dev:web": "bun run --cwd apps/web dev",
     "build:all": "bun run build:functions && bun run build:web",
     "build:web": "bun run --cwd apps/web build",
-    "build:functions": "bun build packages/functions/src/auth-google.ts packages/functions/src/auth-callback.ts packages/functions/src/auth-logout.ts packages/functions/src/auth-status.ts packages/functions/src/gmail-threads.ts packages/functions/src/gmail-thread.ts packages/functions/src/gmail-batch.ts --target=node --outdir=netlify/functions --format=esm",
+    "build:functions": "bun build packages/functions/src/auth-google.ts packages/functions/src/auth-callback.ts packages/functions/src/auth-logout.ts packages/functions/src/auth-status.ts packages/functions/src/gmail-threads.ts packages/functions/src/gmail-thread.ts packages/functions/src/gmail-batch.ts packages/functions/src/gmail-labels.ts --target=node --outdir=netlify/functions --format=esm",
     "test": "bun run test:functions && bun run test:web",
     "test:functions": "bun run --cwd packages/functions test",
     "test:web": "bun run --cwd apps/web test",
