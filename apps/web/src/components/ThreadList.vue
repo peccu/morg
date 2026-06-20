@@ -1,20 +1,23 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref } from 'vue'
 import ThreadListItem from './ThreadListItem.vue'
-import { useThreads } from '@/composables/useThreads'
 import type { ThreadListItem as TThreadListItem } from '@morg/shared'
 
-const props = defineProps<{ query: string; checkedIds: Set<string> }>()
-const emit = defineEmits<{ select: [thread: TThreadListItem]; check: [id: string] }>()
+const props = defineProps<{
+  threads: TThreadListItem[]
+  isFetching: boolean
+  isError: boolean
+  error: Error | null
+  hasNextPage: boolean
+  checkedIds: Set<string>
+}>()
+const emit = defineEmits<{
+  select: [thread: TThreadListItem]
+  check: [id: string]
+  loadMore: []
+}>()
 
 const selectedId = ref<string | null>(null)
-const q = computed(() => props.query)
-
-const { data, isFetching, isError, error, fetchNextPage, hasNextPage } = useThreads(q)
-
-const threads = computed(() =>
-  data.value?.pages.flatMap((p) => p.threads) ?? []
-)
 
 function select(thread: TThreadListItem) {
   selectedId.value = thread.threadId
@@ -53,7 +56,7 @@ function select(thread: TThreadListItem) {
           <button
             class="text-sm text-blue-500 hover:text-blue-700 disabled:opacity-50 cursor-pointer"
             :disabled="isFetching"
-            @click="fetchNextPage()"
+            @click="emit('loadMore')"
           >
             {{ isFetching ? '読み込み中...' : 'もっと読む' }}
           </button>
