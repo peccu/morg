@@ -1,10 +1,11 @@
 import { describe, test, expect, vi, beforeEach } from 'vitest'
-import { mount } from '@vue/test-utils'
+import { mount, flushPromises } from '@vue/test-utils'
 import { createPinia, setActivePinia } from 'pinia'
 import LoginView from '@/views/LoginView.vue'
 
 beforeEach(() => {
   setActivePinia(createPinia())
+  vi.restoreAllMocks()
 })
 
 describe('LoginView', () => {
@@ -19,15 +20,39 @@ describe('LoginView', () => {
     expect(wrapper.text()).toContain('Googleアカウントでログイン')
   })
 
-  test('calls auth.login() on button click', async () => {
-    const wrapper = mount(LoginView)
-    // window.location.href の書き換えをモック
+  test('shows spinner and navigates to Google URL on login', async () => {
+    const googleUrl = 'https://accounts.google.com/o/oauth2/v2/auth?test=1'
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
+      ok: true,
+      json: () => Promise.resolve({ url: googleUrl }),
+    }))
     const mockLocation = { href: '' }
     vi.stubGlobal('location', mockLocation)
 
-    const button = wrapper.find('button')
-    await button.trigger('click')
+    const wrapper = mount(LoginView)
+    await wrapper.find('button').trigger('click')
 
-    expect(mockLocation.href).toBe('/.netlify/functions/auth-google')
+    // スピナーが出ることを確認
+    expect(wrapper.find('svg.animate-spin').exists()).toBe(true)
+
+    await flushPromises()
+
+    // Google の URL に遷移していること
+    expect(mockLocation.href).toBe(googleUrl)
+  })
+
+  test('shows error message when login fails', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
+      ok: false,
+      status: 500,
+      json: () => Promise.resolve({ error: '環境変数が未設定です' }),
+    }))
+
+    const wrapper = mount(LoginView)
+    await wrapper.find('button').trigger('click')
+    await flushPromises()
+
+    expect(wrapper.text()).toContain('ログインに失敗しました')
+    expect(wrapper.text()).toContain('環境変数が未設定です')
   })
 })

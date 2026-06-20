@@ -3,32 +3,47 @@ import { ref } from 'vue'
 
 export const useAuthStore = defineStore('auth', () => {
   const isAuthenticated = ref(false)
-  const userEmail = ref<string | null>(null)
-  const initialized = ref(false)
+  const userEmail       = ref<string | null>(null)
+  const initialized     = ref(false)
+  const isLoggingIn     = ref(false)
+  const loginError      = ref<string | null>(null)
 
   async function checkAuth() {
     try {
-      const res = await fetch('/.netlify/functions/auth-status')
+      const res  = await fetch('/.netlify/functions/auth-status')
       const data = await res.json()
       isAuthenticated.value = data.authenticated
-      userEmail.value = data.email ?? null
+      userEmail.value       = data.email ?? null
     } catch {
       isAuthenticated.value = false
-      userEmail.value = null
+      userEmail.value       = null
     } finally {
       initialized.value = true
     }
   }
 
-  function login() {
-    window.location.href = '/.netlify/functions/auth-google'
+  async function login() {
+    isLoggingIn.value = true
+    loginError.value  = null
+    try {
+      const res = await fetch('/.netlify/functions/auth-google')
+      const data = await res.json() as { url?: string; error?: string }
+      if (!res.ok || !data.url) {
+        throw new Error(data.error ?? `HTTP ${res.status}`)
+      }
+      // Google OAuth 画面へ遷移（ここでSPAは破棄される）
+      window.location.href = data.url
+    } catch (e) {
+      loginError.value  = e instanceof Error ? e.message : String(e)
+      isLoggingIn.value = false
+    }
   }
 
   async function logout() {
     await fetch('/.netlify/functions/auth-logout', { method: 'POST' })
     isAuthenticated.value = false
-    userEmail.value = null
+    userEmail.value       = null
   }
 
-  return { isAuthenticated, initialized, userEmail, checkAuth, login, logout }
+  return { isAuthenticated, initialized, userEmail, isLoggingIn, loginError, checkAuth, login, logout }
 })
