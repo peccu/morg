@@ -89,7 +89,7 @@ const displayLabels = computed(() => {
 
     <!-- メール情報：選択中はチェック切替、通常はスレッド開く -->
     <div
-      class="flex-1 min-w-0 py-3 pr-4 cursor-pointer"
+      class="flex-1 min-w-0 py-1.5 pr-3 cursor-pointer"
       @click="selectionMode ? $emit('check', thread.threadId) : $emit('click')"
     >
       <div class="flex items-baseline justify-between gap-2">
@@ -98,15 +98,15 @@ const displayLabels = computed(() => {
         </span>
         <span class="text-xs text-gray-400 flex-shrink-0">{{ formatDate(thread.date) }}</span>
       </div>
-      <p class="text-sm truncate mt-0.5" :class="thread.unread ? 'font-medium text-gray-900' : 'text-gray-600'">
+      <p class="text-sm truncate leading-tight" :class="thread.unread ? 'font-medium text-gray-900' : 'text-gray-600'">
         {{ thread.subject }}
       </p>
-      <p class="text-xs text-gray-400 truncate mt-0.5">{{ thread.snippet }}</p>
-      <div v-if="displayLabels.length" class="flex flex-wrap gap-1 mt-1">
+      <p class="text-xs text-gray-400 truncate leading-tight">{{ thread.snippet }}</p>
+      <div v-if="displayLabels.length" class="flex flex-wrap gap-1 mt-0.5">
         <span
           v-for="label in displayLabels"
           :key="label.id"
-          class="text-xs px-1.5 py-0.5 rounded-full"
+          class="text-xs px-1.5 py-px rounded-full"
           :class="label.style"
         >{{ label.name }}</span>
       </div>
