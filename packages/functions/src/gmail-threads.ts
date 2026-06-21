@@ -12,7 +12,7 @@ export const handler: Handler = async (event) => {
   const params = event.queryStringParameters ?? {}
   const q = params['q'] ?? 'in:inbox'
   const pageToken = params['pageToken'] ?? undefined
-  const maxResults = Math.min(Number(params['maxResults'] ?? 50), 500)
+  const maxResults = Math.min(Number(params['maxResults'] ?? 20), 500)
 
   try {
     const { token, updatedSession } = await getValidToken(session)
