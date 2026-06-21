@@ -1,6 +1,7 @@
 import { ref } from 'vue'
 import { useQueryClient } from '@tanstack/vue-query'
 import type { BatchAction } from '@morg/shared'
+import { applyThreadCacheUpdate } from '@/lib/thread-cache'
 
 export function useMessageAction(threadId: () => string) {
   const queryClient = useQueryClient()
@@ -23,8 +24,11 @@ export function useMessageAction(threadId: () => string) {
       }
       const body = await res.json().catch(() => ({})) as { succeeded?: number; failed?: number }
       if (body.failed) error.value = `${body.failed}件の操作に失敗しました`
+
+      // スレッド単位でリストキャッシュを更新
+      applyThreadCacheUpdate(queryClient, [threadId()], action, labelId)
+      // スレッド詳細は再フェッチして正確な状態に同期
       await queryClient.invalidateQueries({ queryKey: ['thread'] })
-      await queryClient.invalidateQueries({ queryKey: ['threads'] })
     } catch (e) {
       error.value = e instanceof Error ? e.message : String(e)
     } finally {
