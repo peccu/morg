@@ -27,23 +27,39 @@ async function trashMessage(token: string, messageId: string) {
   if (!res.ok) throw new Error(`trash failed for ${messageId}: ${res.status}`)
 }
 
+async function runBatched(
+  fns: (() => Promise<void>)[],
+  concurrency = 10,
+): Promise<{ succeeded: number; failed: number }> {
+  let succeeded = 0
+  let failed = 0
+  for (let i = 0; i < fns.length; i += concurrency) {
+    const results = await Promise.allSettled(fns.slice(i, i + concurrency).map((f) => f()))
+    for (const r of results) {
+      if (r.status === 'fulfilled') succeeded++
+      else failed++
+    }
+  }
+  return { succeeded, failed }
+}
+
 async function applyAction(token: string, req: MessageOperationRequest) {
   const { messageIds, action, labelId } = req
   switch (action) {
     case 'archive':
-      return Promise.all(messageIds.map((id) => modifyMessage(token, id, [], ['INBOX'])))
+      return runBatched(messageIds.map((id) => () => modifyMessage(token, id, [], ['INBOX'])))
     case 'trash':
-      return Promise.all(messageIds.map((id) => trashMessage(token, id)))
+      return runBatched(messageIds.map((id) => () => trashMessage(token, id)))
     case 'markRead':
-      return Promise.all(messageIds.map((id) => modifyMessage(token, id, [], ['UNREAD'])))
+      return runBatched(messageIds.map((id) => () => modifyMessage(token, id, [], ['UNREAD'])))
     case 'markUnread':
-      return Promise.all(messageIds.map((id) => modifyMessage(token, id, ['UNREAD'], [])))
+      return runBatched(messageIds.map((id) => () => modifyMessage(token, id, ['UNREAD'], [])))
     case 'addLabel':
       if (!labelId) throw new Error('labelId required')
-      return Promise.all(messageIds.map((id) => modifyMessage(token, id, [labelId], [])))
+      return runBatched(messageIds.map((id) => () => modifyMessage(token, id, [labelId], [])))
     case 'removeLabel':
       if (!labelId) throw new Error('labelId required')
-      return Promise.all(messageIds.map((id) => modifyMessage(token, id, [], [labelId])))
+      return runBatched(messageIds.map((id) => () => modifyMessage(token, id, [], [labelId])))
     default:
       throw new Error(`Unknown action: ${action}`)
   }
@@ -72,12 +88,13 @@ export const handler: Handler = async (event) => {
 
   try {
     const { token, updatedSession } = await getValidToken(session)
-    await applyAction(token, req)
+    const result = await applyAction(token, req)
 
     const headers: Record<string, string> = { 'Content-Type': 'application/json' }
     if (updatedSession) headers['Set-Cookie'] = makeSessionCookie(updatedSession)
 
-    return { statusCode: 200, headers, body: JSON.stringify({ ok: true, count: req.messageIds.length }) }
+    const status = result.failed > 0 ? 207 : 200
+    return { statusCode: status, headers, body: JSON.stringify({ ok: result.failed === 0, ...result }) }
   } catch (err) {
     console.error('gmail-message-batch error:', err)
     return { statusCode: 500, body: JSON.stringify({ error: 'Message operation failed' }) }

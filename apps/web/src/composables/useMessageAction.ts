@@ -17,11 +17,12 @@ export function useMessageAction(threadId: () => string) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ messageIds, action, labelId }),
       })
-      if (!res.ok) {
+      if (res.status >= 400) {
         const body = await res.json().catch(() => ({})) as { error?: string }
         throw new Error(body.error ?? `HTTP ${res.status}`)
       }
-      // ['thread'] prefix match — Ref vs string の不一致を避けるため prefix で一括 invalidate
+      const body = await res.json().catch(() => ({})) as { succeeded?: number; failed?: number }
+      if (body.failed) error.value = `${body.failed}件の操作に失敗しました`
       await queryClient.invalidateQueries({ queryKey: ['thread'] })
       await queryClient.invalidateQueries({ queryKey: ['threads'] })
     } catch (e) {
