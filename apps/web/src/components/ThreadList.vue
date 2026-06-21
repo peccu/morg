@@ -11,6 +11,7 @@ const props = defineProps<{
   hasNextPage: boolean
   checkedIds: Set<string>
   autoFetchStopped: boolean
+  autoFetchEnabled: boolean
 }>()
 const emit = defineEmits<{
   select: [thread: TThreadListItem]
@@ -71,7 +72,7 @@ function select(thread: TThreadListItem) {
 
       <!-- 右端固定エリア：取得状況 + 選択解除 -->
       <div class="ml-auto flex items-center gap-1 flex-shrink-0">
-        <template v-if="hasNextPage && !autoFetchStopped">
+        <template v-if="autoFetchEnabled && hasNextPage && !autoFetchStopped">
           <svg class="w-3.5 h-3.5 animate-spin text-blue-500 flex-shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
             <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
             <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
@@ -115,13 +116,13 @@ function select(thread: TThreadListItem) {
           @click="select(thread)"
           @check="emit('check', $event)"
         />
-        <!-- 停止中・手動続き読み込み -->
-        <div v-if="hasNextPage && autoFetchStopped" class="flex items-center justify-end gap-3 px-4 py-3 border-t text-sm">
+        <!-- 次ページあり：inbox は常時「もっと読む」、検索中で停止時は「続きを取得」 -->
+        <div v-if="hasNextPage && (!autoFetchEnabled || autoFetchStopped)" class="flex items-center justify-end gap-3 px-4 py-3 border-t text-sm">
           <button
             class="px-3 min-h-[44px] flex items-center text-sm text-blue-500 hover:text-blue-700 border rounded cursor-pointer"
             :disabled="isFetching"
             @click="emit('loadMore')"
-          >{{ isFetching ? '読み込み中...' : '続きを取得' }}</button>
+          >{{ isFetching ? '読み込み中...' : (autoFetchEnabled ? '続きを取得' : 'もっと読む') }}</button>
         </div>
 
         <!-- 全件読み込み完了 -->

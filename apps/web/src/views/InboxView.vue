@@ -245,6 +245,7 @@ async function onLogout() {
             :error="(error as Error | null)"
             :has-next-page="!!hasNextPage"
             :checked-ids="checkedIds"
+            :auto-fetch-enabled="isActiveSearch"
             :auto-fetch-stopped="autoFetchStopped"
             @select="onSelect"
             @check="toggleCheck"
