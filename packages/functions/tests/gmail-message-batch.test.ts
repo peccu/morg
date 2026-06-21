@@ -72,9 +72,9 @@ describe('gmail-message-batch handler', () => {
     expect(body.removeLabelIds).toContain('UNREAD')
   })
 
-  test('returns 200 on success with count', async () => {
+  test('returns 200 on success with succeeded/failed', async () => {
     const res = await handler(mockEvent({ messageIds: ['a', 'b'], action: 'markUnread' }), {} as never)
     expect(res?.statusCode).toBe(200)
-    expect(JSON.parse(res?.body ?? '{}')).toMatchObject({ ok: true, count: 2 })
+    expect(JSON.parse(res?.body ?? '{}')).toMatchObject({ ok: true, succeeded: 2, failed: 0 })
   })
 })

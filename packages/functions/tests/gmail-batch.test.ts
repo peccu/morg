@@ -87,11 +87,12 @@ describe('gmail-batch handler', () => {
     expect(body.removeLabelIds).toContain('UNREAD')
   })
 
-  test('returns ok:true with count on success', async () => {
+  test('returns ok:true with succeeded/failed on success', async () => {
     const res = await handler(makeEvent({ threadIds: ['t1', 't2'], action: 'markRead' }), {} as never)
     expect(res?.statusCode).toBe(200)
     const body = JSON.parse(res?.body ?? '{}')
     expect(body.ok).toBe(true)
-    expect(body.count).toBe(2)
+    expect(body.succeeded).toBe(2)
+    expect(body.failed).toBe(0)
   })
 })
