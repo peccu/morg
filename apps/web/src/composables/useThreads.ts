@@ -3,7 +3,7 @@ import type { ThreadListResponse } from '@morg/shared'
 import type { Ref } from 'vue'
 
 async function fetchThreads(q: string, pageToken?: string): Promise<ThreadListResponse> {
-  const params = new URLSearchParams({ q })
+  const params = new URLSearchParams({ q, maxResults: '50' })
   if (pageToken) params.set('pageToken', pageToken)
   const res = await fetch(`/.netlify/functions/gmail-threads?${params}`)
   if (!res.ok) {

@@ -48,17 +48,18 @@ const query = computed(() =>
 const { data, isFetching, isError, error, fetchNextPage, hasNextPage } = useThreads(query)
 const { data: labels } = useLabels()
 
-// ──────── 自動取得 ────────
+// ──────── 自動取得（送信者フィルタ or 検索条件あり の場合のみ） ────────
+const isActiveSearch = computed(() =>
+  activeSender.value !== null || baseQuery.value !== 'in:inbox',
+)
 const autoFetchStopped = ref(false)
 
-// クエリが変わったら自動取得を再開
 watch(query, () => { autoFetchStopped.value = false })
 
-// 次ページがあり、取得中でなく、停止していなければ自動で次ページを取得
 watch(
-  [hasNextPage, isFetching, autoFetchStopped],
-  ([hasNext, fetching, stopped]) => {
-    if (hasNext && !fetching && !stopped) fetchNextPage()
+  [hasNextPage, isFetching, autoFetchStopped, isActiveSearch],
+  ([hasNext, fetching, stopped, isSearch]) => {
+    if (hasNext && !fetching && !stopped && isSearch) fetchNextPage()
   },
 )
 
