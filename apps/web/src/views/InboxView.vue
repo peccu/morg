@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, watch, onMounted, onUnmounted, defineComponent, h } from 'vue'
+import { ref, computed, watch, defineComponent, h } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useQueryClient } from '@tanstack/vue-query'
 import { useAuthStore } from '@/stores/auth'
@@ -128,20 +128,10 @@ function onSelect(thread: ThreadListItem) {
   router.push({ name: 'thread', params: { id: thread.threadId } })
 }
 
-// ──────── iOS ステータスバータップ → リスト先頭へ ────────
-// body が overflow:hidden のため window は常に scrollY=0
-// iOS だけがステータスバータップ時に window scroll イベントを発火する
+// iOS ステータスバータップ → ネイティブ動作に任せる
+// overflow:hidden を取り除いて ThreadList の scroll container が
+// WebKit の唯一の UIScrollView になるようにする
 const threadListRef = ref<InstanceType<typeof ThreadList> | null>(null)
-
-onMounted(() => {
-  window.addEventListener('scroll', onStatusBarTap, { passive: true })
-})
-onUnmounted(() => {
-  window.removeEventListener('scroll', onStatusBarTap)
-})
-function onStatusBarTap() {
-  threadListRef.value?.scrollToTop()
-}
 
 function onReload() {
   autoFetchStopped.value = false
@@ -156,7 +146,7 @@ async function onLogout() {
 </script>
 
 <template>
-  <div class="h-dvh flex flex-col bg-white overflow-hidden">
+  <div class="h-dvh flex flex-col bg-white">
     <!-- ヘッダー -->
     <header class="bg-forest-900 border-b border-forest-800 flex items-center gap-1.5 px-2 flex-shrink-0 safe-top h-[52px]">
       <span class="font-bold text-sm w-10 flex-shrink-0 text-forest-100">morg</span>
@@ -204,7 +194,7 @@ async function onLogout() {
       <div v-if="showMenu" class="fixed inset-0 z-40" @click="showMenu = false" />
     </header>
 
-    <div class="flex flex-1 overflow-hidden">
+    <div class="flex flex-1 min-h-0">
       <!-- PC サイドバー（フォルダ＋ラベル） -->
       <aside class="hidden md:flex flex-col w-36 border-r flex-shrink-0 overflow-y-auto px-1 py-1 gap-0.5">
         <SidebarItem
@@ -226,12 +216,12 @@ async function onLogout() {
       </aside>
 
       <!-- PC 送信者パネル -->
-      <div class="hidden md:flex flex-col w-52 border-r flex-shrink-0 overflow-hidden">
+      <div class="hidden md:flex flex-col w-52 border-r flex-shrink-0 min-h-0">
         <SenderPanel :senders="senders" :active-sender="activeSender" @select="onSenderSelect" />
       </div>
 
       <!-- スレッドリスト本体 -->
-      <main class="flex-1 overflow-hidden flex flex-col">
+      <main class="flex-1 flex flex-col min-h-0">
         <!-- SP タブ（min-h-[44px] で Apple HIG 準拠） -->
         <div class="flex md:hidden border-b">
           <button

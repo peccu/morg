@@ -50,7 +50,7 @@ function select(thread: TThreadListItem) {
 </script>
 
 <template>
-  <div class="flex flex-col overflow-hidden">
+  <div class="flex flex-col min-h-0">
     <!-- 全選択バー（min-h-[44px] で Apple HIG 準拠） -->
     <div
       v-if="threads.length > 0"
@@ -98,7 +98,7 @@ function select(thread: TThreadListItem) {
     </div>
 
     <!-- スレッド一覧 -->
-    <div ref="listEl" class="flex-1 overflow-y-auto min-h-0">
+    <div ref="listEl" class="flex-1 overflow-y-auto min-h-0 overscroll-y-none">
       <div v-if="isFetching && threads.length === 0" class="p-8 text-center text-gray-400 text-sm">
         読み込み中...
       </div>

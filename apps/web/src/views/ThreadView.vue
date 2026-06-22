@@ -107,7 +107,7 @@ function goToSender() {
 </script>
 
 <template>
-  <div class="h-dvh flex flex-col bg-white overflow-hidden">
+  <div class="h-dvh flex flex-col bg-white">
     <!-- ヘッダー -->
     <header class="border-b flex items-center gap-2 px-3 flex-shrink-0 safe-top min-h-[44px]">
       <button
