@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, computed, watch, defineComponent, h } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
+import { useQueryClient } from '@tanstack/vue-query'
 import { useAuthStore } from '@/stores/auth'
 import { useThreads } from '@/composables/useThreads'
 import { useSenders } from '@/composables/useSenders'
@@ -25,9 +26,11 @@ const SidebarItem = defineComponent({
 })
 
 // ──────── 状態（URLクエリパラメータが source of truth） ────────
-const auth   = useAuthStore()
-const router = useRouter()
-const route  = useRoute()
+const auth        = useAuthStore()
+const router      = useRouter()
+const route       = useRoute()
+const queryClient = useQueryClient()
+const showMenu    = ref(false)
 
 // URL: ?q=in:inbox&sender=foo@bar.com
 const baseQuery    = computed(() => String(route.query.q   || 'in:inbox'))
@@ -125,7 +128,13 @@ function onSelect(thread: ThreadListItem) {
   router.push({ name: 'thread', params: { id: thread.threadId } })
 }
 
+function onReload() {
+  autoFetchStopped.value = false
+  queryClient.resetQueries({ queryKey: ['threads'], exact: false })
+}
+
 async function onLogout() {
+  showMenu.value = false
   await auth.logout()
   router.push({ name: 'login' })
 }
@@ -134,28 +143,50 @@ async function onLogout() {
 <template>
   <div class="h-dvh flex flex-col bg-white overflow-hidden">
     <!-- ヘッダー -->
-    <header class="border-b flex items-center gap-1.5 px-2 flex-shrink-0 safe-top min-h-[44px]">
+    <header class="border-b flex items-center gap-1.5 px-2 flex-shrink-0 safe-top h-[52px]">
       <span class="font-bold text-sm w-10 flex-shrink-0">morg</span>
 
-      <form class="flex-1" @submit.prevent="onSearch">
-        <div class="flex gap-1">
+      <form class="flex-1 flex items-center" @submit.prevent="onSearch">
+        <div class="flex gap-1 w-full items-center">
           <input
             v-model="searchInput"
             type="search"
             placeholder="検索..."
-            class="flex-1 border rounded px-2 text-sm outline-none focus:ring-1 focus:ring-blue-400 min-w-0 min-h-[44px]"
+            class="flex-1 border rounded px-2 text-sm outline-none focus:ring-1 focus:ring-blue-400 min-w-0 h-9"
           />
           <button
             type="submit"
-            class="px-3 bg-blue-500 text-white text-sm rounded hover:bg-blue-600 cursor-pointer flex-shrink-0 min-h-[44px]"
+            class="px-3 h-9 bg-blue-500 text-white text-sm rounded hover:bg-blue-600 cursor-pointer flex-shrink-0"
           >検索</button>
         </div>
       </form>
 
+      <!-- リロードボタン -->
       <button
-        class="text-xs text-gray-400 hover:text-gray-700 cursor-pointer flex-shrink-0 px-2 min-h-[44px] flex items-center"
-        @click="onLogout"
-      >ログアウト</button>
+        class="w-11 h-11 flex items-center justify-center text-gray-400 hover:text-gray-700 cursor-pointer flex-shrink-0 text-base"
+        :class="isFetching ? 'animate-spin' : ''"
+        title="再読み込み"
+        @click="onReload"
+      >↻</button>
+
+      <!-- メニューボタン（ログアウトを格納） -->
+      <div class="relative flex-shrink-0">
+        <button
+          class="w-11 h-11 flex items-center justify-center text-gray-400 hover:text-gray-700 cursor-pointer text-lg"
+          @click="showMenu = !showMenu"
+        >≡</button>
+        <div
+          v-if="showMenu"
+          class="absolute right-0 top-full mt-1 bg-white border rounded shadow-lg z-50 min-w-[120px]"
+        >
+          <button
+            class="w-full text-left px-4 min-h-[44px] flex items-center text-sm text-red-500 hover:bg-gray-50 cursor-pointer"
+            @click="onLogout"
+          >ログアウト</button>
+        </div>
+      </div>
+      <!-- メニュー外クリックで閉じる -->
+      <div v-if="showMenu" class="fixed inset-0 z-40" @click="showMenu = false" />
     </header>
 
     <div class="flex flex-1 overflow-hidden">
