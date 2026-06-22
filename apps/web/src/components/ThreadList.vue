@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, defineExpose } from 'vue'
+import { ref, computed } from 'vue'
 import ThreadListItem from './ThreadListItem.vue'
 import type { ThreadListItem as TThreadListItem } from '@morg/shared'
 
@@ -23,13 +23,6 @@ const emit = defineEmits<{
 }>()
 
 const selectedId = ref<string | null>(null)
-const listEl = ref<HTMLElement | null>(null)
-
-defineExpose({
-  scrollToTop() {
-    listEl.value?.scrollTo({ top: 0, behavior: 'smooth' })
-  },
-})
 
 const allChecked = computed(
   () => props.threads.length > 0 && props.threads.every((t) => props.checkedIds.has(t.threadId)),
@@ -50,7 +43,7 @@ function select(thread: TThreadListItem) {
 </script>
 
 <template>
-  <div class="flex flex-col min-h-0">
+  <div class="flex flex-col overflow-hidden">
     <!-- 全選択バー（min-h-[44px] で Apple HIG 準拠） -->
     <div
       v-if="threads.length > 0"
@@ -98,7 +91,7 @@ function select(thread: TThreadListItem) {
     </div>
 
     <!-- スレッド一覧 -->
-    <div ref="listEl" class="flex-1 overflow-y-auto min-h-0 overscroll-y-none">
+    <div class="flex-1 overflow-y-auto min-h-0">
       <div v-if="isFetching && threads.length === 0" class="p-8 text-center text-gray-400 text-sm">
         読み込み中...
       </div>
