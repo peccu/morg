@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, watch, defineComponent, h } from 'vue'
+import { ref, computed, watch, onMounted, onUnmounted, defineComponent, h } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useQueryClient } from '@tanstack/vue-query'
 import { useAuthStore } from '@/stores/auth'
@@ -126,6 +126,21 @@ function clearChecked() { checkedIds.value = new Set() }
 
 function onSelect(thread: ThreadListItem) {
   router.push({ name: 'thread', params: { id: thread.threadId } })
+}
+
+// ──────── iOS ステータスバータップ → リスト先頭へ ────────
+// body が overflow:hidden のため window は常に scrollY=0
+// iOS だけがステータスバータップ時に window scroll イベントを発火する
+const threadListRef = ref<InstanceType<typeof ThreadList> | null>(null)
+
+onMounted(() => {
+  window.addEventListener('scroll', onStatusBarTap, { passive: true })
+})
+onUnmounted(() => {
+  window.removeEventListener('scroll', onStatusBarTap)
+})
+function onStatusBarTap() {
+  threadListRef.value?.scrollToTop()
 }
 
 function onReload() {
@@ -269,6 +284,7 @@ async function onLogout() {
         <template v-if="spTab === 'list' || activeSender">
           <BulkActionBar :selected-ids="[...checkedIds]" :labels="labels ?? []" @clear="clearChecked" />
           <ThreadList
+            ref="threadListRef"
             class="flex-1 min-h-0"
             :threads="threads"
             :is-fetching="isFetching"
