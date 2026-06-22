@@ -53,6 +53,34 @@ const isProcessing = computed(() => threadProcessing.value || msgProcessing.valu
 // メッセージ選択状態
 const checkedMsgIds = ref(new Set<string>())
 
+// 横スクロールモード（per-message）
+const scrollMsgIds = ref(new Set<string>())
+function toggleScrollMode(msgId: string) {
+  const next = new Set(scrollMsgIds.value)
+  next.has(msgId) ? next.delete(msgId) : next.add(msgId)
+  scrollMsgIds.value = next
+}
+
+// HTMLメール内リンクを新しいタブで開く
+function onMailClick(e: MouseEvent) {
+  const a = (e.target as HTMLElement).closest('a')
+  if (!a) return
+  const { href } = a
+  if (href.startsWith('http://') || href.startsWith('https://')) {
+    e.preventDefault()
+    window.open(href, '_blank', 'noopener,noreferrer')
+  }
+}
+
+// メッセージ本文キャッシュ（v-for 内で extractBody を複数呼びしない）
+const msgBodies = computed(() => {
+  const map = new Map<string, { html: string; text: string }>()
+  for (const msg of thread.value?.messages ?? []) {
+    if (msg.payload) map.set(msg.id, extractBody(msg.payload as GmailMessagePart))
+  }
+  return map
+})
+
 function toggleMsg(msgId: string) {
   const next = new Set(checkedMsgIds.value)
   next.has(msgId) ? next.delete(msgId) : next.add(msgId)
@@ -223,12 +251,22 @@ function goToSender() {
             </div>
 
             <!-- メッセージ本文 -->
-            <div class="px-3 py-3 overflow-x-auto">
+            <div class="overflow-x-auto">
+              <!-- 横幅モード切替（HTMLメールのみ） -->
+              <div v-if="msgBodies.get(msg.id)?.html" class="flex justify-end px-3 pt-2">
+                <button
+                  class="text-xs border rounded px-2 py-0.5 cursor-pointer flex-shrink-0"
+                  :class="scrollMsgIds.has(msg.id) ? 'text-forest-700 border-forest-400 bg-forest-50' : 'text-gray-400 border-gray-300 hover:text-gray-600'"
+                  @click.stop="toggleScrollMode(msg.id)"
+                >{{ scrollMsgIds.has(msg.id) ? '縮小' : '↔ 横スクロール' }}</button>
+              </div>
               <div
                 v-if="msg.payload"
-                class="mail-body min-w-0 text-sm text-gray-800 max-w-full"
-                style="word-break: break-word; overflow-wrap: break-word;"
-                v-html="extractBody(msg.payload as GmailMessagePart).html || msg.snippet"
+                class="mail-body text-sm text-gray-800 px-3 py-3"
+                :class="scrollMsgIds.has(msg.id) ? 'mail-scroll' : 'min-w-0 max-w-full'"
+                :style="scrollMsgIds.has(msg.id) ? undefined : 'word-break:break-word;overflow-wrap:break-word'"
+                v-html="msgBodies.get(msg.id)?.html || msg.snippet"
+                @click="onMailClick"
               />
             </div>
           </article>
