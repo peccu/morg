@@ -74,7 +74,7 @@ function onMailClick(e: MouseEvent) {
 
 // メッセージ本文キャッシュ（v-for 内で extractBody を複数呼びしない）
 const msgBodies = computed(() => {
-  const map = new Map<string, { html: string; text: string }>()
+  const map = new Map<string, { html: string; isHtml: boolean }>()
   for (const msg of thread.value?.messages ?? []) {
     if (msg.payload) map.set(msg.id, extractBody(msg.payload as GmailMessagePart))
   }
@@ -253,7 +253,7 @@ function goToSender() {
             <!-- メッセージ本文 -->
             <div class="overflow-x-auto">
               <!-- 横幅モード切替（HTMLメールのみ） -->
-              <div v-if="msgBodies.get(msg.id)?.html" class="flex justify-end px-3 pt-2">
+              <div v-if="msgBodies.get(msg.id)?.isHtml" class="flex justify-end px-3 pt-2">
                 <button
                   class="text-xs border rounded px-2 py-0.5 cursor-pointer flex-shrink-0"
                   :class="scrollMsgIds.has(msg.id) ? 'text-forest-700 border-forest-400 bg-forest-50' : 'text-gray-400 border-gray-300 hover:text-gray-600'"
