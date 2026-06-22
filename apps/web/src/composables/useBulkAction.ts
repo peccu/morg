@@ -3,6 +3,10 @@ import { useQueryClient } from '@tanstack/vue-query'
 import type { BatchAction } from '@morg/shared'
 import { applyThreadCacheUpdate } from '@/lib/thread-cache'
 
+// Netlify 関数の10秒タイムアウトに収まるよう1リクエストあたりの上限を設定
+// 50件 / 10並列 = 5バッチ × ~300ms ≈ 1.5秒
+const CHUNK_SIZE = 50
+
 export function useBulkAction() {
   const queryClient = useQueryClient()
   const isProcessing = ref(false)
@@ -12,22 +16,25 @@ export function useBulkAction() {
     if (!threadIds.length) return
     isProcessing.value = true
     error.value = null
+    let totalFailed = 0
     try {
-      const res = await fetch('/.netlify/functions/gmail-batch', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ threadIds, action, labelId }),
-      })
-      if (res.status >= 400) {
-        const body = await res.json().catch(() => ({})) as { error?: string }
-        throw new Error(body.error ?? `HTTP ${res.status}`)
+      for (let i = 0; i < threadIds.length; i += CHUNK_SIZE) {
+        const chunk = threadIds.slice(i, i + CHUNK_SIZE)
+        const res = await fetch('/.netlify/functions/gmail-batch', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ threadIds: chunk, action, labelId }),
+        })
+        if (res.status >= 400) {
+          const body = await res.json().catch(() => ({})) as { error?: string }
+          throw new Error(body.error ?? `HTTP ${res.status}`)
+        }
+        const body = await res.json().catch(() => ({})) as { succeeded?: number; failed?: number }
+        totalFailed += body.failed ?? 0
+        // チャンクごとにキャッシュ更新 → 50件ずつリストから消える
+        applyThreadCacheUpdate(queryClient, chunk, action, labelId)
       }
-      const body = await res.json().catch(() => ({})) as { succeeded?: number; failed?: number }
-      if (body.failed) error.value = `${body.failed}件の操作に失敗しました`
-
-      // キャッシュを直接書き換えてリストを即時更新（ページリセットなし）
-      applyThreadCacheUpdate(queryClient, threadIds, action, labelId)
-      // スレッド詳細だけ再フェッチ
+      if (totalFailed > 0) error.value = `${totalFailed}件の操作に失敗しました`
       await queryClient.invalidateQueries({ queryKey: ['thread'] })
     } catch (e) {
       error.value = e instanceof Error ? e.message : String(e)
