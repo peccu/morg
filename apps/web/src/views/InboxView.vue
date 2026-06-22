@@ -17,8 +17,8 @@ const SidebarItem = defineComponent({
   setup(props, { emit }) {
     return () => h('button', {
       class: [
-        'w-full text-left px-2 py-1.5 text-sm rounded hover:bg-gray-100 cursor-pointer',
-        props.active ? 'bg-blue-50 text-blue-700 font-medium' : 'text-gray-700',
+        'w-full text-left px-2 py-1.5 text-sm rounded hover:bg-forest-100 cursor-pointer',
+        props.active ? 'bg-forest-100 text-forest-800 font-medium' : 'text-gray-700',
       ],
       onClick: () => emit('click'),
     }, props.label)
@@ -143,8 +143,8 @@ async function onLogout() {
 <template>
   <div class="h-dvh flex flex-col bg-white overflow-hidden">
     <!-- ヘッダー -->
-    <header class="border-b flex items-center gap-1.5 px-2 flex-shrink-0 safe-top h-[52px]">
-      <span class="font-bold text-sm w-10 flex-shrink-0">morg</span>
+    <header class="bg-forest-900 border-b border-forest-800 flex items-center gap-1.5 px-2 flex-shrink-0 safe-top h-[52px]">
+      <span class="font-bold text-sm w-10 flex-shrink-0 text-forest-100">morg</span>
 
       <form class="flex-1 flex items-center" @submit.prevent="onSearch">
         <div class="flex gap-1 w-full items-center">
@@ -152,18 +152,18 @@ async function onLogout() {
             v-model="searchInput"
             type="search"
             placeholder="検索..."
-            class="flex-1 border rounded px-2 text-sm outline-none focus:ring-1 focus:ring-blue-400 min-w-0 h-9"
+            class="flex-1 border border-forest-700 bg-forest-800 text-forest-100 placeholder-forest-400 rounded px-2 text-sm outline-none focus:ring-1 focus:ring-forest-400 min-w-0 h-9"
           />
           <button
             type="submit"
-            class="px-3 h-9 bg-blue-500 text-white text-sm rounded hover:bg-blue-600 cursor-pointer flex-shrink-0"
+            class="px-3 h-9 bg-forest-600 text-white text-sm rounded hover:bg-forest-500 cursor-pointer flex-shrink-0"
           >検索</button>
         </div>
       </form>
 
       <!-- リロードボタン -->
       <button
-        class="w-11 h-11 flex items-center justify-center text-gray-400 hover:text-gray-700 cursor-pointer flex-shrink-0 text-base"
+        class="w-11 h-11 flex items-center justify-center text-forest-300 hover:text-forest-100 cursor-pointer flex-shrink-0 text-base"
         :class="isFetching ? 'animate-spin' : ''"
         title="再読み込み"
         @click="onReload"
@@ -172,7 +172,7 @@ async function onLogout() {
       <!-- メニューボタン（ログアウトを格納） -->
       <div class="relative flex-shrink-0">
         <button
-          class="w-11 h-11 flex items-center justify-center text-gray-400 hover:text-gray-700 cursor-pointer text-lg"
+          class="w-11 h-11 flex items-center justify-center text-forest-300 hover:text-forest-100 cursor-pointer text-lg"
           @click="showMenu = !showMenu"
         >≡</button>
         <div
@@ -222,17 +222,17 @@ async function onLogout() {
           <button
             v-for="t in navTabs" :key="t.q"
             class="flex-1 min-h-[44px] flex items-center justify-center text-sm font-medium cursor-pointer"
-            :class="baseQuery === t.q && spTab === 'list' && !activeSender ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-500'"
+            :class="baseQuery === t.q && spTab === 'list' && !activeSender ? 'text-forest-600 border-b-2 border-forest-600' : 'text-gray-500'"
             @click="setBaseQuery(t.q); spTab = 'list'"
           >{{ t.label }}</button>
           <button
             class="flex-1 min-h-[44px] flex items-center justify-center text-sm font-medium cursor-pointer"
-            :class="spTab === 'senders' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-500'"
+            :class="spTab === 'senders' ? 'text-forest-600 border-b-2 border-forest-600' : 'text-gray-500'"
             @click="spTab = 'senders'"
           >送信者</button>
           <button
             class="flex-1 min-h-[44px] flex items-center justify-center text-sm font-medium cursor-pointer"
-            :class="spTab === 'labels' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-500'"
+            :class="spTab === 'labels' ? 'text-forest-600 border-b-2 border-forest-600' : 'text-gray-500'"
             @click="spTab = 'labels'"
           >ラベル</button>
         </div>
@@ -247,7 +247,7 @@ async function onLogout() {
           <div
             v-for="l in labels" :key="l.id"
             class="flex items-center px-3 min-h-[44px] border-b cursor-pointer hover:bg-gray-50"
-            :class="baseQuery === l.query && !activeSender ? 'bg-blue-50' : ''"
+            :class="baseQuery === l.query && !activeSender ? 'bg-forest-50' : ''"
             @click="onLabelSelect(l.query)"
           >
             <span class="text-sm" :class="l.type === 'user' ? 'text-gray-700' : 'text-gray-600'">
@@ -258,10 +258,10 @@ async function onLogout() {
         </div>
 
         <!-- アクティブフィルタ表示 -->
-        <div v-if="activeSender" class="flex items-center gap-2 px-3 min-h-[44px] bg-blue-50 border-b text-sm flex-shrink-0">
-          <span class="text-blue-700 truncate">送信者: {{ activeSender }}</span>
+        <div v-if="activeSender" class="flex items-center gap-2 px-3 min-h-[44px] bg-forest-50 border-b text-sm flex-shrink-0">
+          <span class="text-forest-700 truncate">送信者: {{ activeSender }}</span>
           <button
-            class="ml-auto flex-shrink-0 w-11 h-11 flex items-center justify-center rounded-full text-gray-400 hover:bg-blue-100 hover:text-gray-700 cursor-pointer text-base"
+            class="ml-auto flex-shrink-0 w-11 h-11 flex items-center justify-center rounded-full text-gray-400 hover:bg-forest-100 hover:text-gray-700 cursor-pointer text-base"
             @click="onSenderSelect(null)"
           >✕</button>
         </div>

@@ -20,7 +20,7 @@ onMounted(async () => {
 </script>
 
 <template>
-  <div class="min-h-screen flex items-center justify-center bg-gray-50 p-6">
+  <div class="min-h-screen flex items-center justify-center bg-forest-50 p-6">
     <div class="max-w-sm w-full bg-white rounded-xl shadow-sm p-8 text-center space-y-5">
       <div class="w-16 h-16 rounded-full bg-green-100 flex items-center justify-center mx-auto">
         <svg class="w-8 h-8 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -40,7 +40,7 @@ onMounted(async () => {
 
       <a
         href="/inbox"
-        class="block w-full py-2.5 bg-blue-500 text-white rounded-lg text-sm font-medium hover:bg-blue-600"
+        class="block w-full py-2.5 bg-forest-600 text-white rounded-lg text-sm font-medium hover:bg-forest-500"
       >
         受信トレイを開く
       </a>

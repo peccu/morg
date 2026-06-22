@@ -37,7 +37,7 @@ const LABEL_NAMES: Record<string, string> = {
   STARRED: 'スター', IMPORTANT: '重要', SPAM: '迷惑', TRASH: 'ゴミ箱',
 }
 const LABEL_STYLE: Record<string, string> = {
-  INBOX:     'bg-blue-100 text-blue-700',
+  INBOX:     'bg-forest-100 text-forest-700',
   SENT:      'bg-green-100 text-green-700',
   DRAFT:     'bg-orange-100 text-orange-700',
   STARRED:   'bg-yellow-100 text-yellow-700',
@@ -62,7 +62,7 @@ const displayLabels = computed(() => {
 <template>
   <div
     class="flex items-stretch border-b transition-colors"
-    :class="checked ? 'bg-blue-50' : selected ? 'bg-blue-50' : 'hover:bg-gray-50'"
+    :class="checked ? 'bg-forest-50' : selected ? 'bg-forest-50' : 'hover:bg-gray-50'"
   >
     <!-- チェック領域：タップしやすい広いエリア -->
     <button
@@ -72,7 +72,7 @@ const displayLabels = computed(() => {
     >
       <div
         v-if="checked"
-        class="w-5 h-5 rounded bg-blue-500 flex items-center justify-center"
+        class="w-5 h-5 rounded bg-forest-600 flex items-center justify-center"
       >
         <svg class="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
           <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
@@ -81,9 +81,9 @@ const displayLabels = computed(() => {
       <div
         v-else
         class="w-5 h-5 rounded border-2 flex items-center justify-center"
-        :class="thread.unread ? 'border-blue-400 bg-blue-50' : 'border-gray-300'"
+        :class="thread.unread ? 'border-forest-400 bg-forest-50' : 'border-gray-300'"
       >
-        <div v-if="thread.unread" class="w-2 h-2 rounded-full bg-blue-500" />
+        <div v-if="thread.unread" class="w-2 h-2 rounded-full bg-forest-600" />
       </div>
     </button>
 

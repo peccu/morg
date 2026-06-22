@@ -55,12 +55,12 @@ function select(thread: TThreadListItem) {
       >
         <div
           class="w-5 h-5 rounded border-2 flex items-center justify-center flex-shrink-0"
-          :class="allChecked ? 'bg-blue-500 border-blue-500' : checkedIds.size > 0 ? 'bg-blue-100 border-blue-400' : 'border-gray-400'"
+          :class="allChecked ? 'bg-forest-600 border-forest-600' : checkedIds.size > 0 ? 'bg-forest-100 border-forest-400' : 'border-gray-400'"
         >
           <svg v-if="allChecked" class="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
             <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
           </svg>
-          <div v-else-if="checkedIds.size > 0" class="w-2.5 h-0.5 bg-blue-500 rounded" />
+          <div v-else-if="checkedIds.size > 0" class="w-2.5 h-0.5 bg-forest-600 rounded" />
         </div>
         <span>全て選択</span>
       </button>
@@ -73,7 +73,7 @@ function select(thread: TThreadListItem) {
       <!-- 右端固定エリア：取得状況 + 選択解除 -->
       <div class="ml-auto flex items-center gap-1 flex-shrink-0">
         <template v-if="autoFetchEnabled && hasNextPage && !autoFetchStopped">
-          <svg class="w-3.5 h-3.5 animate-spin text-blue-500 flex-shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+          <svg class="w-3.5 h-3.5 animate-spin text-forest-500 flex-shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
             <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
             <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
           </svg>
@@ -119,7 +119,7 @@ function select(thread: TThreadListItem) {
         <!-- 次ページあり：inbox は常時「もっと読む」、検索中で停止時は「続きを取得」 -->
         <div v-if="hasNextPage && (!autoFetchEnabled || autoFetchStopped)" class="flex items-center justify-end gap-3 px-4 py-3 border-t text-sm">
           <button
-            class="px-3 min-h-[44px] flex items-center text-sm text-blue-500 hover:text-blue-700 border rounded cursor-pointer"
+            class="px-3 min-h-[44px] flex items-center text-sm text-forest-600 hover:text-forest-800 border rounded cursor-pointer"
             :disabled="isFetching"
             @click="emit('loadMore')"
           >{{ isFetching ? '読み込み中...' : (autoFetchEnabled ? '続きを取得' : 'もっと読む') }}</button>

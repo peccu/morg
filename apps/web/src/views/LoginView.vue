@@ -5,7 +5,7 @@ const auth = useAuthStore()
 </script>
 
 <template>
-  <div class="min-h-dvh flex items-center justify-center bg-gray-50 px-4">
+  <div class="min-h-dvh flex items-center justify-center bg-forest-50 px-4">
     <div class="max-w-sm w-full space-y-6 p-8 bg-white rounded-xl shadow-sm">
       <div class="text-center">
         <h1 class="text-3xl font-bold text-gray-900">morg</h1>
@@ -14,7 +14,7 @@ const auth = useAuthStore()
 
       <!-- ログイン中スピナー -->
       <div v-if="auth.isLoggingIn" class="flex flex-col items-center gap-3 py-4">
-        <svg class="w-8 h-8 animate-spin text-blue-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+        <svg class="w-8 h-8 animate-spin text-forest-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
           <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
           <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
         </svg>

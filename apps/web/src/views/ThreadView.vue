@@ -28,7 +28,7 @@ const LABEL_NAMES: Record<string, string> = {
   STARRED: 'スター', IMPORTANT: '重要', SPAM: '迷惑', TRASH: 'ゴミ箱',
 }
 const LABEL_STYLE: Record<string, string> = {
-  INBOX:     'bg-blue-100 text-blue-700',
+  INBOX:     'bg-forest-100 text-forest-700',
   SENT:      'bg-green-100 text-green-700',
   DRAFT:     'bg-orange-100 text-orange-700',
   STARRED:   'bg-yellow-100 text-yellow-700',
@@ -122,11 +122,11 @@ function goToSender() {
       class="border-b flex items-center gap-1 px-2 flex-shrink-0 min-h-[44px] bg-gray-50 relative"
     >
       <div v-if="isProcessing" class="absolute inset-0 bg-gray-50/80 flex items-center justify-center gap-2 z-10">
-        <svg class="w-4 h-4 animate-spin text-blue-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+        <svg class="w-4 h-4 animate-spin text-forest-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
           <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
           <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
         </svg>
-        <span class="text-sm text-blue-700 font-medium">処理中...</span>
+        <span class="text-sm text-forest-700 font-medium">処理中...</span>
       </div>
 
       <span class="text-xs text-gray-400 flex-shrink-0">全体:</span>
@@ -138,7 +138,7 @@ function goToSender() {
       <button
         v-if="senderEmail"
         :disabled="isProcessing"
-        class="ml-auto flex items-center gap-1 min-h-[44px] px-2 text-sm text-blue-600 hover:text-blue-800 disabled:opacity-50 cursor-pointer max-w-[40%]"
+        class="ml-auto flex items-center gap-1 min-h-[44px] px-2 text-sm text-forest-600 hover:text-forest-800 disabled:opacity-50 cursor-pointer max-w-[40%]"
         @click="goToSender"
       >
         <span class="truncate">{{ senderName }}</span>
@@ -149,16 +149,16 @@ function goToSender() {
     <!-- 選択メッセージ用アクションバー -->
     <div
       v-if="checkedMsgIds.size > 0"
-      class="border-b flex items-center gap-1 px-2 flex-shrink-0 min-h-[44px] bg-blue-50 relative"
+      class="border-b flex items-center gap-1 px-2 flex-shrink-0 min-h-[44px] bg-forest-50 relative"
     >
-      <div v-if="isProcessing" class="absolute inset-0 bg-blue-50/80 flex items-center justify-center gap-2 z-10">
-        <svg class="w-4 h-4 animate-spin text-blue-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+      <div v-if="isProcessing" class="absolute inset-0 bg-forest-50/80 flex items-center justify-center gap-2 z-10">
+        <svg class="w-4 h-4 animate-spin text-forest-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
           <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
           <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
         </svg>
       </div>
 
-      <span class="text-xs text-blue-700 font-medium">{{ checkedMsgIds.size }}件選択</span>
+      <span class="text-xs text-forest-700 font-medium">{{ checkedMsgIds.size }}件選択</span>
       <button :disabled="isProcessing" class="px-2.5 min-h-[44px] flex items-center text-sm rounded bg-white border hover:bg-gray-100 disabled:opacity-50 cursor-pointer" @click="runMsgAction('archive')">アーカイブ</button>
       <button :disabled="isProcessing" class="px-2.5 min-h-[44px] flex items-center text-sm rounded bg-white border hover:bg-gray-100 disabled:opacity-50 cursor-pointer" @click="runMsgAction('trash')">削除</button>
       <button :disabled="isProcessing" class="px-2.5 min-h-[44px] flex items-center text-sm rounded bg-white border hover:bg-gray-100 disabled:opacity-50 cursor-pointer" @click="runMsgAction('markRead')">既読</button>
@@ -180,7 +180,7 @@ function goToSender() {
             v-for="msg in thread.messages"
             :key="msg.id"
             class="border rounded-lg overflow-hidden"
-            :class="checkedMsgIds.has(msg.id) ? 'ring-2 ring-blue-400' : ''"
+            :class="checkedMsgIds.has(msg.id) ? 'ring-2 ring-forest-400' : ''"
           >
             <!-- メッセージヘッダー（チェック付き） -->
             <div
@@ -191,7 +191,7 @@ function goToSender() {
               <div class="flex items-center justify-center w-12 flex-shrink-0 min-h-[44px]">
                 <div
                   class="w-5 h-5 rounded border-2 flex items-center justify-center"
-                  :class="checkedMsgIds.has(msg.id) ? 'bg-blue-500 border-blue-500' : 'border-gray-400'"
+                  :class="checkedMsgIds.has(msg.id) ? 'bg-forest-600 border-forest-600' : 'border-gray-400'"
                 >
                   <svg v-if="checkedMsgIds.has(msg.id)" class="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />

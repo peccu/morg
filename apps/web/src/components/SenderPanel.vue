@@ -14,7 +14,7 @@ const emit = defineEmits<{ select: [address: string | null] }>()
       <span class="text-xs font-semibold text-gray-400 uppercase tracking-wide">送信者</span>
       <button
         v-if="activeSender"
-        class="text-sm text-blue-500 hover:text-blue-700 cursor-pointer min-h-[44px] px-3 flex items-center"
+        class="text-sm text-forest-600 hover:text-forest-800 cursor-pointer min-h-[44px] px-3 flex items-center"
         @click="emit('select', null)"
       >クリア</button>
     </div>
@@ -27,7 +27,7 @@ const emit = defineEmits<{ select: [address: string | null] }>()
         v-for="s in senders"
         :key="s.address"
         class="w-full text-left px-3 py-2 hover:bg-gray-50 cursor-pointer flex items-center gap-2 transition-colors"
-        :class="activeSender === s.address ? 'bg-blue-50' : ''"
+        :class="activeSender === s.address ? 'bg-forest-50' : ''"
         @click="emit('select', activeSender === s.address ? null : s.address)"
       >
         <!-- アバター -->
@@ -35,14 +35,14 @@ const emit = defineEmits<{ select: [address: string | null] }>()
           {{ s.name[0]?.toUpperCase() ?? '?' }}
         </div>
         <div class="flex-1 min-w-0">
-          <p class="text-xs font-medium truncate" :class="activeSender === s.address ? 'text-blue-700' : 'text-gray-800'">
+          <p class="text-xs font-medium truncate" :class="activeSender === s.address ? 'text-forest-700' : 'text-gray-800'">
             {{ s.name }}
           </p>
           <p class="text-xs text-gray-400 truncate">{{ s.address }}</p>
         </div>
         <div class="flex flex-col items-end gap-0.5 flex-shrink-0">
           <span class="text-xs text-gray-400">{{ s.count }}</span>
-          <span v-if="s.unread > 0" class="text-xs text-blue-500 font-medium">{{ s.unread }}未読</span>
+          <span v-if="s.unread > 0" class="text-xs text-forest-600 font-medium">{{ s.unread }}未読</span>
         </div>
       </button>
     </div>
