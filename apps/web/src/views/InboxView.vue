@@ -56,15 +56,35 @@ const isActiveSearch = computed(() =>
   activeSender.value !== null || baseQuery.value !== 'in:inbox',
 )
 const autoFetchStopped = ref(false)
+// フェッチサイクルが実際に開始されて動いているか（「すべき状態か」とは別）
+// ウォッチャーが fetchNextPage() を呼んだ時だけ true になる
+// クエリ変更・ユーザー停止・画面遷移後の復帰ではリセットされるため
+// インジケーターが「空振り」表示されることを防ぐ
+const autoFetchActive = ref(false)
 
-watch(query, () => { autoFetchStopped.value = false })
+watch(query, () => {
+  autoFetchStopped.value = false
+  autoFetchActive.value = false
+})
 
 watch(
   [hasNextPage, isFetching, autoFetchStopped, isActiveSearch],
   ([hasNext, fetching, stopped, isSearch]) => {
-    if (hasNext && !fetching && !stopped && isSearch) fetchNextPage()
+    if (hasNext && !fetching && !stopped && isSearch) {
+      autoFetchActive.value = true
+      fetchNextPage()
+    }
   },
 )
+
+function onStopFetch() {
+  autoFetchStopped.value = true
+  autoFetchActive.value = false
+}
+function onLoadMore() {
+  autoFetchStopped.value = false
+  // autoFetchActive は watch が fetchNextPage() を呼んだ時に true になる
+}
 
 const threads = computed<ThreadListItem[]>(() =>
   data.value?.pages.flatMap((p) => p.threads) ?? [],
@@ -278,13 +298,14 @@ async function onLogout() {
             :has-next-page="!!hasNextPage"
             :checked-ids="checkedIds"
             :auto-fetch-enabled="isActiveSearch"
+            :auto-fetch-active="autoFetchActive"
             :auto-fetch-stopped="autoFetchStopped"
             @select="onSelect"
             @check="toggleCheck"
             @select-all="selectAll"
             @clear-all="clearChecked"
-            @load-more="autoFetchStopped = false"
-            @stop-fetch="autoFetchStopped = true"
+            @load-more="onLoadMore"
+            @stop-fetch="onStopFetch"
           />
         </template>
       </main>

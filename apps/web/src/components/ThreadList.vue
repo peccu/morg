@@ -12,6 +12,7 @@ const props = defineProps<{
   checkedIds: Set<string>
   autoFetchStopped: boolean
   autoFetchEnabled: boolean
+  autoFetchActive: boolean
 }>()
 const emit = defineEmits<{
   select: [thread: TThreadListItem]
@@ -72,7 +73,7 @@ function select(thread: TThreadListItem) {
 
       <!-- 右端固定エリア：取得状況 + 選択解除 -->
       <div class="ml-auto flex items-center gap-1 flex-shrink-0">
-        <template v-if="autoFetchEnabled && hasNextPage && !autoFetchStopped">
+        <template v-if="autoFetchEnabled && autoFetchActive && hasNextPage && !autoFetchStopped">
           <svg class="w-3.5 h-3.5 animate-spin text-forest-500 flex-shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
             <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
             <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
