@@ -37,8 +37,10 @@ function updateThreads(
           ? { ...t, labelIds: t.labelIds.filter((l) => l !== labelId) }
           : t,
       )
-    default:
+    default: {
+      const _: never = action
       return threads
+    }
   }
 }
 
