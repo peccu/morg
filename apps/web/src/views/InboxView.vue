@@ -9,7 +9,10 @@ import { useLabels } from '@/composables/useLabels'
 import ThreadList from '@/components/ThreadList.vue'
 import BulkActionBar from '@/components/BulkActionBar.vue'
 import SenderPanel from '@/components/SenderPanel.vue'
+import { useAppUpdate } from '@/composables/useAppUpdate'
 import type { ThreadListItem } from '@morg/shared'
+
+const { needRefresh, updateServiceWorker } = useAppUpdate()
 
 const SidebarItem = defineComponent({
   props: { label: String, active: Boolean },
@@ -209,6 +212,18 @@ async function onLogout() {
       <!-- メニュー外クリックで閉じる -->
       <div v-if="showMenu" class="fixed inset-0 z-40" @click="showMenu = false" />
     </header>
+
+    <!-- アップデートバナー -->
+    <div
+      v-if="needRefresh"
+      class="bg-forest-700 text-forest-100 text-sm px-3 py-2 flex items-center gap-2 flex-shrink-0"
+    >
+      <span class="flex-1">新しいバージョンが利用可能です</span>
+      <button
+        class="px-3 min-h-[36px] flex items-center bg-forest-500 hover:bg-forest-400 rounded text-xs font-medium cursor-pointer"
+        @click="updateServiceWorker()"
+      >今すぐ更新</button>
+    </div>
 
     <div class="flex flex-1 overflow-hidden">
       <!-- PC サイドバー（フォルダ＋ラベル） -->
