@@ -1,4 +1,4 @@
-import { describe, test, expect, vi, beforeEach } from 'vitest'
+import { describe, test, expect, vi, beforeEach, afterEach } from 'vitest'
 import { shallowMount } from '@vue/test-utils'
 import ThreadList from '@/components/ThreadList.vue'
 import type { ThreadListItem } from '@morg/shared'
@@ -114,6 +114,53 @@ describe('ThreadList', () => {
       items.forEach((item) => {
         expect(item.classes()).not.toContain('pointer-events-none')
       })
+    })
+  })
+
+  describe('スクロールバー自動表示', () => {
+    beforeEach(() => {
+      vi.useFakeTimers()
+    })
+    afterEach(() => {
+      vi.useRealTimers()
+    })
+
+    test('スクロール前はスクロールコンテナに is-scrolling クラスが付かない', () => {
+      const wrapper = mountThreadList()
+      const scrollContainer = wrapper.find('.thread-list-scroll')
+      expect(scrollContainer.classes()).not.toContain('is-scrolling')
+    })
+
+    test('scroll イベント発火後に is-scrolling クラスが付く', async () => {
+      const wrapper = mountThreadList()
+      const scrollContainer = wrapper.find('.thread-list-scroll')
+      await scrollContainer.trigger('scroll')
+      expect(scrollContainer.classes()).toContain('is-scrolling')
+    })
+
+    test('scroll 後 1000ms 経過すると is-scrolling が外れる', async () => {
+      const wrapper = mountThreadList()
+      const scrollContainer = wrapper.find('.thread-list-scroll')
+      await scrollContainer.trigger('scroll')
+      expect(scrollContainer.classes()).toContain('is-scrolling')
+      vi.advanceTimersByTime(1000)
+      await wrapper.vm.$nextTick()
+      expect(scrollContainer.classes()).not.toContain('is-scrolling')
+    })
+
+    test('連続スクロールでタイマーがリセットされる', async () => {
+      const wrapper = mountThreadList()
+      const scrollContainer = wrapper.find('.thread-list-scroll')
+      await scrollContainer.trigger('scroll')
+      vi.advanceTimersByTime(500)
+      await scrollContainer.trigger('scroll')
+      vi.advanceTimersByTime(800)
+      await wrapper.vm.$nextTick()
+      // 2回目のスクロールから 800ms しか経っていないのでまだ is-scrolling
+      expect(scrollContainer.classes()).toContain('is-scrolling')
+      vi.advanceTimersByTime(200)
+      await wrapper.vm.$nextTick()
+      expect(scrollContainer.classes()).not.toContain('is-scrolling')
     })
   })
 })

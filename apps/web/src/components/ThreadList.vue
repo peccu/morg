@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, onUnmounted } from 'vue'
 import ThreadListItem from './ThreadListItem.vue'
 import type { ThreadListItem as TThreadListItem } from '@morg/shared'
 
@@ -43,6 +43,21 @@ function select(thread: TThreadListItem) {
   selectedId.value = thread.threadId
   emit('select', thread)
 }
+
+const isScrolling = ref(false)
+let scrollTimer: ReturnType<typeof setTimeout> | null = null
+
+function onScroll() {
+  isScrolling.value = true
+  if (scrollTimer) clearTimeout(scrollTimer)
+  scrollTimer = setTimeout(() => {
+    isScrolling.value = false
+  }, 1000)
+}
+
+onUnmounted(() => {
+  if (scrollTimer) clearTimeout(scrollTimer)
+})
 </script>
 
 <template>
@@ -90,7 +105,11 @@ function select(thread: TThreadListItem) {
     </div>
 
     <!-- スレッド一覧 -->
-    <div class="flex-1 overflow-y-auto min-h-0">
+    <div
+      class="flex-1 overflow-y-scroll min-h-0 thread-list-scroll"
+      :class="{ 'is-scrolling': isScrolling }"
+      @scroll.passive="onScroll"
+    >
       <div v-if="isFetching && threads.length === 0" class="p-8 text-center text-gray-400 text-sm">
         読み込み中...
       </div>
