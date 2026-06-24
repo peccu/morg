@@ -40,7 +40,8 @@ const baseQuery    = computed(() => String(route.query.q   || 'in:inbox'))
 const activeSender = computed(() => typeof route.query.sender === 'string' ? route.query.sender : null)
 
 const searchInput = ref('')
-const checkedIds  = ref(new Set<string>())
+const checkedIds        = ref(new Set<string>())
+const bulkIsProcessing  = ref(false)
 type SpTab = 'list' | 'senders' | 'labels'
 const spTab = ref<SpTab>('list')
 
@@ -303,7 +304,7 @@ async function onLogout() {
         </div>
 
         <template v-if="spTab === 'list' || activeSender">
-          <BulkActionBar :selected-ids="[...checkedIds]" :labels="labels ?? []" @clear="clearChecked" />
+          <BulkActionBar :selected-ids="[...checkedIds]" :labels="labels ?? []" @clear="clearChecked" @update:is-processing="bulkIsProcessing = $event" />
           <ThreadList
             class="flex-1 min-h-0"
             :threads="threads"
@@ -315,6 +316,7 @@ async function onLogout() {
             :auto-fetch-enabled="isActiveSearch"
             :auto-fetch-active="autoFetchActive"
             :auto-fetch-stopped="autoFetchStopped"
+            :is-processing="bulkIsProcessing"
             @select="onSelect"
             @check="toggleCheck"
             @select-all="selectAll"

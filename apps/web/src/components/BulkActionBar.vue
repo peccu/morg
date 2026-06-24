@@ -1,14 +1,16 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, watch } from 'vue'
 import { useBulkAction } from '@/composables/useBulkAction'
 import type { BatchAction } from '@morg/shared'
 import type { LabelItem } from '@/composables/useLabels'
 
 const props = defineProps<{ selectedIds: string[]; labels: LabelItem[] }>()
-const emit = defineEmits<{ clear: [] }>()
+const emit = defineEmits<{ clear: []; 'update:isProcessing': [boolean] }>()
 
 const { execute, isProcessing } = useBulkAction()
 const showLabelMenu = ref(false)
+
+watch(isProcessing, (val) => emit('update:isProcessing', val))
 
 async function run(action: BatchAction, labelId?: string) {
   await execute(props.selectedIds, action, labelId)

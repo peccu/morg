@@ -13,6 +13,7 @@ const props = defineProps<{
   autoFetchStopped: boolean
   autoFetchEnabled: boolean
   autoFetchActive: boolean
+  isProcessing?: boolean
 }>()
 const emit = defineEmits<{
   select: [thread: TThreadListItem]
@@ -30,6 +31,7 @@ const allChecked = computed(
 )
 
 function toggleSelectAll() {
+  if (props.isProcessing) return
   if (allChecked.value) {
     emit('clearAll')
   } else {
@@ -51,7 +53,8 @@ function select(thread: TThreadListItem) {
       class="flex items-center gap-2 px-2 border-b bg-gray-50 text-sm flex-shrink-0 min-h-[44px]"
     >
       <button
-        class="flex items-center gap-2 cursor-pointer text-gray-600 hover:text-gray-900 min-h-[44px] pr-2"
+        class="flex items-center gap-2 cursor-pointer text-gray-600 hover:text-gray-900 min-h-[44px] pr-2 disabled:opacity-50 disabled:cursor-not-allowed"
+        :disabled="isProcessing"
         @click="toggleSelectAll"
       >
         <div
@@ -114,6 +117,7 @@ function select(thread: TThreadListItem) {
           :selected="selectedId === thread.threadId"
           :checked="checkedIds.has(thread.threadId)"
           :selection-mode="checkedIds.size > 0"
+          :class="{ 'pointer-events-none': isProcessing }"
           @click="select(thread)"
           @check="emit('check', $event)"
         />

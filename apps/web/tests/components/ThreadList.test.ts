@@ -1,0 +1,102 @@
+import { describe, test, expect, vi, beforeEach } from 'vitest'
+import { shallowMount } from '@vue/test-utils'
+import ThreadList from '@/components/ThreadList.vue'
+import type { ThreadListItem } from '@morg/shared'
+
+const mockThreads: ThreadListItem[] = [
+  {
+    id: 'm1',
+    threadId: 't1',
+    from: 'Alice <alice@example.com>',
+    subject: 'Hello',
+    snippet: 'snippet 1',
+    date: '2024-01-01T00:00:00Z',
+    unread: false,
+    labelIds: ['INBOX'],
+  },
+  {
+    id: 'm2',
+    threadId: 't2',
+    from: 'Bob <bob@example.com>',
+    subject: 'World',
+    snippet: 'snippet 2',
+    date: '2024-01-02T00:00:00Z',
+    unread: true,
+    labelIds: ['INBOX', 'UNREAD'],
+  },
+]
+
+function mountThreadList(overrides: Record<string, unknown> = {}) {
+  return shallowMount(ThreadList, {
+    props: {
+      threads: mockThreads,
+      isFetching: false,
+      isError: false,
+      error: null,
+      hasNextPage: false,
+      checkedIds: new Set<string>(),
+      autoFetchStopped: false,
+      autoFetchEnabled: false,
+      autoFetchActive: false,
+      ...overrides,
+    },
+  })
+}
+
+describe('ThreadList', () => {
+  beforeEach(() => {
+    vi.restoreAllMocks()
+  })
+
+  describe('処理中（isProcessing）の非インタラクティブ化', () => {
+    test('isProcessing=false のとき 全て選択ボタンは有効', () => {
+      const wrapper = mountThreadList({ isProcessing: false })
+      const btn = wrapper.find('button[aria-label="全て選択"], button:has(span)')
+      const buttons = wrapper.findAll('button')
+      const selectAllBtn = buttons.find((b) => b.text().includes('全て選択'))
+      expect(selectAllBtn?.attributes('disabled')).toBeUndefined()
+    })
+
+    test('isProcessing=true のとき 全て選択ボタンは disabled になる', () => {
+      const wrapper = mountThreadList({ isProcessing: true })
+      const buttons = wrapper.findAll('button')
+      const selectAllBtn = buttons.find((b) => b.text().includes('全て選択'))
+      expect(selectAllBtn?.attributes('disabled')).toBeDefined()
+    })
+
+    test('isProcessing=true のとき toggleSelectAll を呼んでも emit しない', async () => {
+      const wrapper = mountThreadList({ isProcessing: true })
+      const buttons = wrapper.findAll('button')
+      const selectAllBtn = buttons.find((b) => b.text().includes('全て選択'))
+      await selectAllBtn?.trigger('click')
+      expect(wrapper.emitted('selectAll')).toBeFalsy()
+      expect(wrapper.emitted('clearAll')).toBeFalsy()
+    })
+
+    test('isProcessing=false のとき 全て選択をクリックすると selectAll が emit される', async () => {
+      const wrapper = mountThreadList({ isProcessing: false })
+      const buttons = wrapper.findAll('button')
+      const selectAllBtn = buttons.find((b) => b.text().includes('全て選択'))
+      await selectAllBtn?.trigger('click')
+      expect(wrapper.emitted('selectAll')).toBeTruthy()
+      expect(wrapper.emitted('selectAll')?.[0]).toEqual([['t1', 't2']])
+    })
+
+    test('isProcessing=true のとき ThreadListItem に pointer-events-none が付く', () => {
+      const wrapper = mountThreadList({ isProcessing: true })
+      const items = wrapper.findAllComponents({ name: 'ThreadListItem' })
+      expect(items.length).toBeGreaterThan(0)
+      items.forEach((item) => {
+        expect(item.classes()).toContain('pointer-events-none')
+      })
+    })
+
+    test('isProcessing=false のとき ThreadListItem に pointer-events-none が付かない', () => {
+      const wrapper = mountThreadList({ isProcessing: false })
+      const items = wrapper.findAllComponents({ name: 'ThreadListItem' })
+      items.forEach((item) => {
+        expect(item.classes()).not.toContain('pointer-events-none')
+      })
+    })
+  })
+})
