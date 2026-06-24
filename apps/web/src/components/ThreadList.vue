@@ -86,11 +86,6 @@ function select(thread: TThreadListItem) {
             @click="emit('stopFetch')"
           >止める</button>
         </template>
-        <button
-          v-if="checkedIds.size > 0"
-          class="min-h-[44px] px-3 text-gray-400 hover:text-gray-600 cursor-pointer text-sm flex items-center"
-          @click="emit('clearAll')"
-        >選択解除</button>
       </div>
     </div>
 

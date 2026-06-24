@@ -48,6 +48,23 @@ describe('ThreadList', () => {
     vi.restoreAllMocks()
   })
 
+  describe('選択解除ボタン', () => {
+    test('選択済みがあっても「選択解除」ボタンは表示されない', () => {
+      const wrapper = mountThreadList({ checkedIds: new Set(['t1']) })
+      const buttons = wrapper.findAll('button')
+      const deselect = buttons.find((b) => b.text() === '選択解除')
+      expect(deselect).toBeUndefined()
+    })
+
+    test('全て選択ボタンは全選択済みのとき clearAll を emit する', async () => {
+      const wrapper = mountThreadList({ checkedIds: new Set(['t1', 't2']) })
+      const buttons = wrapper.findAll('button')
+      const selectAllBtn = buttons.find((b) => b.text().includes('全て選択'))
+      await selectAllBtn?.trigger('click')
+      expect(wrapper.emitted('clearAll')).toBeTruthy()
+    })
+  })
+
   describe('処理中（isProcessing）の非インタラクティブ化', () => {
     test('isProcessing=false のとき 全て選択ボタンは有効', () => {
       const wrapper = mountThreadList({ isProcessing: false })
