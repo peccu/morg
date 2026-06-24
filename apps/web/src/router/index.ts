@@ -30,6 +30,12 @@ const router = createRouter({
       component: () => import('@/views/ThreadView.vue'),
       meta: { requiresAuth: true },
     },
+    {
+      path: '/info',
+      name: 'info',
+      component: () => import('@/views/InfoView.vue'),
+      meta: { requiresAuth: true },
+    },
   ],
 })
 

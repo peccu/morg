@@ -205,6 +205,11 @@ async function onLogout() {
           class="absolute right-0 top-full mt-1 bg-white border rounded shadow-lg z-50 min-w-[120px]"
         >
           <button
+            class="w-full text-left px-4 min-h-[44px] flex items-center text-sm text-gray-700 hover:bg-gray-50 cursor-pointer"
+            @click="showMenu = false; router.push({ name: 'info' })"
+          >情報</button>
+          <div class="border-t" />
+          <button
             class="w-full text-left px-4 min-h-[44px] flex items-center text-sm text-red-500 hover:bg-gray-50 cursor-pointer"
             @click="onLogout"
           >ログアウト</button>
