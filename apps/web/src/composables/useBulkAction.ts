@@ -4,8 +4,8 @@ import type { BatchAction } from '@morg/shared'
 import { applyThreadCacheUpdate } from '@/lib/thread-cache'
 
 // Netlify 関数の10秒タイムアウトに収まるよう1リクエストあたりの上限を設定
-// 50件 / 10並列 = 5バッチ × ~300ms ≈ 1.5秒
-const CHUNK_SIZE = 50
+// 20件 / 10並列 = 2バッチ × ~300ms ≈ 0.6秒 → 50件より細かく進捗フィードバック
+const CHUNK_SIZE = 20
 
 export function useBulkAction() {
   const queryClient = useQueryClient()
