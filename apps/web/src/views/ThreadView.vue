@@ -251,7 +251,7 @@ function goToSender() {
             </div>
 
             <!-- メッセージ本文 -->
-            <div class="overflow-x-auto">
+            <div>
               <!-- 横幅モード切替（HTMLメールのみ） -->
               <div v-if="msgBodies.get(msg.id)?.isHtml" class="flex justify-end px-3 pt-2">
                 <button
@@ -260,6 +260,7 @@ function goToSender() {
                   @click.stop="toggleScrollMode(msg.id)"
                 >{{ scrollMsgIds.has(msg.id) ? '縮小' : '↔ 横スクロール' }}</button>
               </div>
+              <!-- mail-body.mail-scroll が自身 overflow-x:auto になるため外側ラッパー不要 -->
               <div
                 v-if="msg.payload"
                 class="mail-body text-sm text-gray-800 px-3 py-3"

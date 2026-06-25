@@ -112,7 +112,13 @@
     background-color: rgba(0, 0, 0, 0.25);
   }
 
-  /* 横スクロールモード: 幅制限を解除 */
+  /* 横スクロールモード: mail-body 自身をスクロールコンテナにして幅制限を解除 */
+  /* iOS Safari では overflow:visible な子の overflow を祖先の overflow-x:auto が検知しないため */
+  /* overflow-x:auto を mail-body 自身に持たせる必要がある */
+  .mail-body.mail-scroll {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
   .mail-body.mail-scroll img,
   .mail-body.mail-scroll table {
     max-width: none;
