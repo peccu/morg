@@ -69,4 +69,42 @@ describe('BulkActionBar', () => {
     await closeBtn?.trigger('click')
     expect(wrapper.emitted('clear')).toBeTruthy()
   })
+
+  describe('削除確認ダイアログ', () => {
+    test('初期状態では確認ダイアログが表示されない', () => {
+      const wrapper = mountBar()
+      expect(wrapper.text()).not.toContain('削除する')
+      expect(wrapper.find('.bg-black\\/40').exists()).toBe(false)
+    })
+
+    test('削除ボタンを押すと確認ダイアログが表示される', async () => {
+      const wrapper = mountBar()
+      const deleteBtn = wrapper.findAll('button').find((b) => b.text() === '削除')
+      await deleteBtn?.trigger('click')
+      expect(wrapper.find('.bg-black\\/40').exists()).toBe(true)
+      expect(wrapper.text()).toContain('削除する')
+      expect(wrapper.text()).toContain('キャンセル')
+    })
+
+    test('キャンセルを押すとダイアログが閉じて execute は呼ばれない', async () => {
+      const wrapper = mountBar()
+      await wrapper.findAll('button').find((b) => b.text() === '削除')?.trigger('click')
+      await wrapper.findAll('button').find((b) => b.text() === 'キャンセル')?.trigger('click')
+      expect(wrapper.find('.bg-black\\/40').exists()).toBe(false)
+      expect(mockExecute).not.toHaveBeenCalled()
+    })
+
+    test('削除するを押すと execute が trash で呼ばれる', async () => {
+      const wrapper = mountBar()
+      await wrapper.findAll('button').find((b) => b.text() === '削除')?.trigger('click')
+      await wrapper.findAll('button').find((b) => b.text() === '削除する')?.trigger('click')
+      expect(mockExecute).toHaveBeenCalledWith(['t1', 't2'], 'trash', undefined)
+    })
+
+    test('確認ダイアログに選択件数が表示される', async () => {
+      const wrapper = mountBar({ selectedIds: ['a', 'b', 'c'] })
+      await wrapper.findAll('button').find((b) => b.text() === '削除')?.trigger('click')
+      expect(wrapper.text()).toContain('3件を削除')
+    })
+  })
 })

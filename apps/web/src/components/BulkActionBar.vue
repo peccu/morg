@@ -9,6 +9,7 @@ const emit = defineEmits<{ clear: []; 'update:isProcessing': [boolean] }>()
 
 const { execute, isProcessing } = useBulkAction()
 const showLabelMenu = ref(false)
+const showDeleteConfirm = ref(false)
 
 watch(isProcessing, (val) => emit('update:isProcessing', val))
 
@@ -16,6 +17,15 @@ async function run(action: BatchAction, labelId?: string) {
   await execute(props.selectedIds, action, labelId)
   showLabelMenu.value = false
   emit('clear')
+}
+
+function requestDelete() {
+  showDeleteConfirm.value = true
+}
+
+async function confirmDelete() {
+  showDeleteConfirm.value = false
+  await run('trash')
 }
 
 const userLabels = () => props.labels.filter((l) => l.type === 'user')
@@ -58,8 +68,8 @@ const userLabels = () => props.labels.filter((l) => l.type === 'user')
 
       <button
         :disabled="isProcessing"
-        class="px-3 h-9 flex items-center rounded bg-white border hover:bg-gray-50 disabled:opacity-50 cursor-pointer text-sm flex-shrink-0"
-        @click="run('trash')"
+        class="px-3 h-9 flex items-center rounded bg-white border border-red-200 text-red-600 hover:bg-red-50 disabled:opacity-50 cursor-pointer text-sm flex-shrink-0"
+        @click="requestDelete"
       >削除</button>
 
       <button
@@ -103,4 +113,26 @@ const userLabels = () => props.labels.filter((l) => l.type === 'user')
     class="fixed inset-0 z-40"
     @click="showLabelMenu = false"
   />
+
+  <!-- 削除確認ダイアログ -->
+  <div
+    v-if="showDeleteConfirm"
+    class="fixed inset-0 z-50 flex items-center justify-center bg-black/40"
+    @click.self="showDeleteConfirm = false"
+  >
+    <div class="bg-white rounded-xl shadow-2xl mx-6 p-6 max-w-xs w-full">
+      <h2 class="text-base font-semibold text-gray-900 mb-1">{{ selectedIds.length }}件を削除</h2>
+      <p class="text-sm text-gray-500 mb-5">削除したスレッドはゴミ箱に移動します。よろしいですか？</p>
+      <div class="flex gap-2">
+        <button
+          class="flex-1 min-h-[44px] border rounded text-sm text-gray-600 hover:bg-gray-50 cursor-pointer"
+          @click="showDeleteConfirm = false"
+        >キャンセル</button>
+        <button
+          class="flex-1 min-h-[44px] bg-red-600 hover:bg-red-500 text-white rounded text-sm font-medium cursor-pointer"
+          @click="confirmDelete"
+        >削除する</button>
+      </div>
+    </div>
+  </div>
 </template>
