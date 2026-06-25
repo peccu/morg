@@ -36,6 +36,12 @@ const router = createRouter({
       component: () => import('@/views/InfoView.vue'),
       meta: { requiresAuth: true },
     },
+    {
+      path: '/plugins',
+      name: 'plugins',
+      component: () => import('@/views/PluginsView.vue'),
+      meta: { requiresAuth: true },
+    },
   ],
 })
 
