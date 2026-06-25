@@ -4,11 +4,16 @@ import { shallowMount } from '@vue/test-utils'
 import { createPinia, setActivePinia } from 'pinia'
 
 const mockExecute = vi.fn()
+const mockIsProcessing = ref(false)
+const mockProgress = ref({ processed: 0, total: 0 })
+const mockEtaMs = ref<number | null>(null)
 vi.mock('@/composables/useBulkAction', () => ({
   useBulkAction: () => ({
     execute: mockExecute,
-    isProcessing: ref(false),
+    isProcessing: mockIsProcessing,
     error: ref(null),
+    progress: mockProgress,
+    etaMs: mockEtaMs,
   }),
 }))
 
@@ -33,6 +38,9 @@ describe('BulkActionBar', () => {
     setActivePinia(createPinia())
     vi.clearAllMocks()
     mockExecute.mockResolvedValue(undefined)
+    mockIsProcessing.value = false
+    mockProgress.value = { processed: 0, total: 0 }
+    mockEtaMs.value = null
   })
 
   test('selectedIds が空のとき何も表示しない', () => {
@@ -68,6 +76,58 @@ describe('BulkActionBar', () => {
     const closeBtn = wrapper.findAll('button').find((b) => b.text() === '✕')
     await closeBtn?.trigger('click')
     expect(wrapper.emitted('clear')).toBeTruthy()
+  })
+
+  describe('プログレスバー', () => {
+    test('処理中でないときオーバーレイが表示されない', () => {
+      const wrapper = mountBar()
+      expect(wrapper.find('.bg-forest-50\\/90').exists()).toBe(false)
+    })
+
+    test('isProcessing=true のときオーバーレイが表示される', async () => {
+      mockIsProcessing.value = true
+      mockProgress.value = { processed: 10, total: 40 }
+      const wrapper = mountBar()
+      await wrapper.vm.$nextTick()
+      expect(wrapper.find('.bg-forest-50\\/90').exists()).toBe(true)
+      expect(wrapper.text()).toContain('10/40件処理中')
+    })
+
+    test('progressPct に応じたバーの幅が設定される', async () => {
+      mockIsProcessing.value = true
+      mockProgress.value = { processed: 20, total: 40 }
+      const wrapper = mountBar()
+      await wrapper.vm.$nextTick()
+      const bar = wrapper.find('.bg-forest-600')
+      expect(bar.attributes('style')).toContain('width: 50%')
+    })
+
+    test('etaMs が設定されているとき残り時間が表示される（秒）', async () => {
+      mockIsProcessing.value = true
+      mockProgress.value = { processed: 5, total: 20 }
+      mockEtaMs.value = 15000
+      const wrapper = mountBar()
+      await wrapper.vm.$nextTick()
+      expect(wrapper.text()).toContain('残り約15秒')
+    })
+
+    test('etaMs が60秒以上のとき分表示になる', async () => {
+      mockIsProcessing.value = true
+      mockProgress.value = { processed: 5, total: 20 }
+      mockEtaMs.value = 90000
+      const wrapper = mountBar()
+      await wrapper.vm.$nextTick()
+      expect(wrapper.text()).toContain('残り約2分')
+    })
+
+    test('etaMs が null のとき残り時間は表示されない', async () => {
+      mockIsProcessing.value = true
+      mockProgress.value = { processed: 5, total: 20 }
+      mockEtaMs.value = null
+      const wrapper = mountBar()
+      await wrapper.vm.$nextTick()
+      expect(wrapper.text()).not.toContain('残り約')
+    })
   })
 
   describe('削除確認ダイアログ', () => {

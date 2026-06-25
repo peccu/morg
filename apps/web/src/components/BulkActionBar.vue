@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, watch } from 'vue'
+import { ref, computed, watch } from 'vue'
 import { useBulkAction } from '@/composables/useBulkAction'
 import type { BatchAction } from '@morg/shared'
 import type { LabelItem } from '@/composables/useLabels'
@@ -7,7 +7,20 @@ import type { LabelItem } from '@/composables/useLabels'
 const props = defineProps<{ selectedIds: string[]; labels: LabelItem[] }>()
 const emit = defineEmits<{ clear: []; 'update:isProcessing': [boolean] }>()
 
-const { execute, isProcessing } = useBulkAction()
+const { execute, isProcessing, progress, etaMs } = useBulkAction()
+
+const progressPct = computed(() =>
+  progress.value.total > 0
+    ? Math.round((progress.value.processed / progress.value.total) * 100)
+    : 0,
+)
+
+const etaText = computed(() => {
+  if (etaMs.value === null) return null
+  const secs = Math.ceil(etaMs.value / 1000)
+  if (secs < 60) return `${secs}秒`
+  return `${Math.ceil(secs / 60)}分`
+})
 const showLabelMenu = ref(false)
 const showDeleteConfirm = ref(false)
 
@@ -36,16 +49,25 @@ const userLabels = () => props.labels.filter((l) => l.type === 'user')
     v-if="selectedIds.length > 0"
     class="flex flex-col bg-forest-50 border-b text-sm flex-shrink-0 relative"
   >
-    <!-- 処理中オーバーレイ -->
+    <!-- 処理中オーバーレイ（プログレスバー） -->
     <div
       v-if="isProcessing"
-      class="absolute inset-0 bg-forest-50/80 flex items-center justify-center gap-2 z-10"
+      class="absolute inset-0 bg-forest-50/90 flex flex-col items-center justify-center gap-2 z-10 px-4"
     >
-      <svg class="w-4 h-4 animate-spin text-forest-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
-        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
-      </svg>
-      <span class="text-sm text-forest-700 font-medium">処理中...</span>
+      <div class="w-full flex items-center gap-2 text-xs text-forest-700">
+        <svg class="w-3.5 h-3.5 animate-spin flex-shrink-0 text-forest-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
+          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
+        </svg>
+        <span class="font-medium">{{ progress.processed }}/{{ progress.total }}件処理中</span>
+        <span v-if="etaText" class="ml-auto text-gray-500">残り約{{ etaText }}</span>
+      </div>
+      <div class="w-full bg-gray-200 rounded-full h-1.5">
+        <div
+          class="bg-forest-600 h-1.5 rounded-full transition-[width] duration-300"
+          :style="{ width: progressPct + '%' }"
+        />
+      </div>
     </div>
 
     <!-- 1行目: 件数 + 閉じるボタン -->
