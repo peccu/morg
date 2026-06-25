@@ -5,9 +5,12 @@ import { useThread } from '@/composables/useThread'
 import { useBulkAction } from '@/composables/useBulkAction'
 import { useMessageAction } from '@/composables/useMessageAction'
 import { useLabels } from '@/composables/useLabels'
+import { usePluginsStore } from '@/stores/plugins'
+import { useAppAPI } from '@/composables/useAppAPI'
 import { extractBody } from '@/lib/mail-body'
 import type { BatchAction } from '@morg/shared'
 import type { GmailMessagePart, GmailMessageHeader } from '@morg/shared'
+import type { Plugin, ThreadAction } from '@/plugins/types'
 
 const route  = useRoute()
 const router = useRouter()
@@ -49,6 +52,36 @@ function msgLabels(labelIds: string[]) {
 }
 
 const isProcessing = computed(() => threadProcessing.value || msgProcessing.value)
+
+const pluginsStore = usePluginsStore()
+const appAPI = useAppAPI()
+
+const pluginThreadActions = computed(() =>
+  pluginsStore.enabledPlugins.flatMap((plugin) =>
+    (plugin.threadActions ?? [])
+      .filter((action) => !action.visible || (thread.value && action.visible({
+        threadId: id.value,
+        thread: thread.value,
+        config: pluginsStore.getConfig(plugin.id),
+        app: appAPI,
+      })))
+      .map((action) => ({ action, plugin }))
+  )
+)
+
+async function runPluginAction(plugin: Plugin, action: ThreadAction) {
+  if (!thread.value) return
+  try {
+    await action.run({
+      threadId: id.value,
+      thread: thread.value,
+      config: pluginsStore.getConfig(plugin.id),
+      app: appAPI,
+    })
+  } catch (e) {
+    appAPI.notify(e instanceof Error ? e.message : '操作に失敗しました', 'error')
+  }
+}
 
 // メッセージ選択状態
 const checkedMsgIds = ref(new Set<string>())
@@ -162,6 +195,17 @@ function goToSender() {
       <button :disabled="isProcessing" class="px-2.5 min-h-[44px] flex items-center text-sm rounded bg-white border hover:bg-gray-100 disabled:opacity-50 cursor-pointer" @click="runThreadAction('trash')">削除</button>
       <button :disabled="isProcessing" class="px-2.5 min-h-[44px] flex items-center text-sm rounded bg-white border hover:bg-gray-100 disabled:opacity-50 cursor-pointer" @click="runThreadAction('markRead')">既読</button>
       <button :disabled="isProcessing" class="px-2.5 min-h-[44px] flex items-center text-sm rounded bg-white border hover:bg-gray-100 disabled:opacity-50 cursor-pointer" @click="runThreadAction('markUnread')">未読</button>
+
+      <template v-if="pluginThreadActions.length > 0">
+        <div class="w-px h-5 bg-gray-300 flex-shrink-0" />
+        <button
+          v-for="{ action, plugin } in pluginThreadActions"
+          :key="`${plugin.id}-${action.id}`"
+          :disabled="isProcessing"
+          class="px-2.5 min-h-[44px] flex items-center text-sm rounded bg-white border hover:bg-gray-100 disabled:opacity-50 cursor-pointer whitespace-nowrap"
+          @click="runPluginAction(plugin, action)"
+        >{{ action.label }}</button>
+      </template>
 
       <button
         v-if="senderEmail"
