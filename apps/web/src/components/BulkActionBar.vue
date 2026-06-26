@@ -70,12 +70,33 @@ const userLabels = () => props.labels.filter((l) => l.type === 'user')
       </div>
     </div>
 
-    <!-- 1行目: 件数 + 閉じるボタン -->
-    <div class="flex items-center px-2 pt-1 pb-0.5">
+    <!-- 1行目: 件数 + ラベル + 閉じるボタン -->
+    <div class="flex items-center px-2 pt-1 pb-0.5 relative">
       <span class="text-forest-700 font-medium text-xs">{{ selectedIds.length }}件選択中</span>
+
+      <!-- ラベル追加ドロップダウン（overflow-x-autoの外に置くためrow1に配置） -->
+      <div class="relative ml-auto mr-1">
+        <button
+          :disabled="isProcessing || userLabels().length === 0"
+          class="px-2 h-8 flex items-center rounded bg-white border hover:bg-gray-50 disabled:opacity-50 cursor-pointer text-xs"
+          @click="showLabelMenu = !showLabelMenu"
+        >ラベル ▾</button>
+        <div
+          v-if="showLabelMenu"
+          class="absolute right-0 top-full mt-1 z-50 bg-white border rounded shadow-lg min-w-36 py-1"
+        >
+          <button
+            v-for="l in userLabels()"
+            :key="l.id"
+            class="w-full text-left px-4 min-h-[44px] flex items-center text-sm hover:bg-gray-50 cursor-pointer"
+            @click="run('addLabel', l.id)"
+          >{{ l.name }}</button>
+        </div>
+      </div>
+
       <button
         :disabled="isProcessing"
-        class="ml-auto w-9 h-9 flex items-center justify-center text-gray-400 hover:text-gray-600 cursor-pointer text-base disabled:opacity-30"
+        class="w-9 h-9 flex items-center justify-center text-gray-400 hover:text-gray-600 cursor-pointer text-base disabled:opacity-30"
         @click="showLabelMenu = false; emit('clear')"
       >✕</button>
     </div>
@@ -105,27 +126,6 @@ const userLabels = () => props.labels.filter((l) => l.type === 'user')
         class="px-3 h-9 flex items-center rounded bg-white border hover:bg-gray-50 disabled:opacity-50 cursor-pointer text-sm flex-shrink-0"
         @click="run('markUnread')"
       >未読</button>
-
-      <!-- ラベル追加ドロップダウン -->
-      <div class="relative flex-shrink-0">
-        <button
-          :disabled="isProcessing || userLabels().length === 0"
-          class="px-3 h-9 flex items-center rounded bg-white border hover:bg-gray-50 disabled:opacity-50 cursor-pointer text-sm"
-          @click="showLabelMenu = !showLabelMenu"
-        >ラベル ▾</button>
-
-        <div
-          v-if="showLabelMenu"
-          class="absolute left-0 top-full mt-1 z-50 bg-white border rounded shadow-lg min-w-36 py-1"
-        >
-          <button
-            v-for="l in userLabels()"
-            :key="l.id"
-            class="w-full text-left px-4 min-h-[44px] flex items-center text-sm hover:bg-gray-50 cursor-pointer"
-            @click="run('addLabel', l.id)"
-          >{{ l.name }}</button>
-        </div>
-      </div>
     </div>
   </div>
 
