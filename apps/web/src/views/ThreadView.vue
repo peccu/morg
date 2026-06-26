@@ -180,7 +180,7 @@ function goToSender() {
     <!-- スレッドレベルアクションバー -->
     <div
       v-if="thread"
-      class="border-b flex items-center gap-1 px-2 flex-shrink-0 min-h-[44px] bg-gray-50 relative"
+      class="border-b flex items-center flex-shrink-0 min-h-[44px] bg-gray-50 relative"
     >
       <div v-if="isProcessing" class="absolute inset-0 bg-gray-50/80 flex items-center justify-center gap-2 z-10">
         <svg class="w-4 h-4 animate-spin text-forest-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
@@ -190,27 +190,31 @@ function goToSender() {
         <span class="text-sm text-forest-700 font-medium">処理中...</span>
       </div>
 
-      <span class="text-xs text-gray-400 flex-shrink-0">全体:</span>
-      <button :disabled="isProcessing" class="px-2.5 min-h-[44px] flex items-center text-sm rounded bg-white border hover:bg-gray-100 disabled:opacity-50 cursor-pointer" @click="runThreadAction('archive')">アーカイブ</button>
-      <button :disabled="isProcessing" class="px-2.5 min-h-[44px] flex items-center text-sm rounded bg-white border hover:bg-gray-100 disabled:opacity-50 cursor-pointer" @click="runThreadAction('trash')">削除</button>
-      <button :disabled="isProcessing" class="px-2.5 min-h-[44px] flex items-center text-sm rounded bg-white border hover:bg-gray-100 disabled:opacity-50 cursor-pointer" @click="runThreadAction('markRead')">既読</button>
-      <button :disabled="isProcessing" class="px-2.5 min-h-[44px] flex items-center text-sm rounded bg-white border hover:bg-gray-100 disabled:opacity-50 cursor-pointer" @click="runThreadAction('markUnread')">未読</button>
+      <!-- ボタン群: 横スクロール可能 -->
+      <div class="flex items-center gap-1 px-2 overflow-x-auto flex-1 min-w-0">
+        <span class="text-xs text-gray-400 flex-shrink-0">全体:</span>
+        <button :disabled="isProcessing" class="px-2.5 min-h-[44px] flex items-center text-sm rounded bg-white border hover:bg-gray-100 disabled:opacity-50 cursor-pointer flex-shrink-0" @click="runThreadAction('archive')">アーカイブ</button>
+        <button :disabled="isProcessing" class="px-2.5 min-h-[44px] flex items-center text-sm rounded bg-white border hover:bg-gray-100 disabled:opacity-50 cursor-pointer flex-shrink-0" @click="runThreadAction('trash')">削除</button>
+        <button :disabled="isProcessing" class="px-2.5 min-h-[44px] flex items-center text-sm rounded bg-white border hover:bg-gray-100 disabled:opacity-50 cursor-pointer flex-shrink-0" @click="runThreadAction('markRead')">既読</button>
+        <button :disabled="isProcessing" class="px-2.5 min-h-[44px] flex items-center text-sm rounded bg-white border hover:bg-gray-100 disabled:opacity-50 cursor-pointer flex-shrink-0" @click="runThreadAction('markUnread')">未読</button>
 
-      <template v-if="pluginThreadActions.length > 0">
-        <div class="w-px h-5 bg-gray-300 flex-shrink-0" />
-        <button
-          v-for="{ action, plugin } in pluginThreadActions"
-          :key="`${plugin.id}-${action.id}`"
-          :disabled="isProcessing"
-          class="px-2.5 min-h-[44px] flex items-center text-sm rounded bg-white border hover:bg-gray-100 disabled:opacity-50 cursor-pointer whitespace-nowrap"
-          @click="runPluginAction(plugin, action)"
-        >{{ action.label }}</button>
-      </template>
+        <template v-if="pluginThreadActions.length > 0">
+          <div class="w-px h-5 bg-gray-300 flex-shrink-0" />
+          <button
+            v-for="{ action, plugin } in pluginThreadActions"
+            :key="`${plugin.id}-${action.id}`"
+            :disabled="isProcessing"
+            class="px-2.5 min-h-[44px] flex items-center text-sm rounded bg-white border hover:bg-gray-100 disabled:opacity-50 cursor-pointer whitespace-nowrap flex-shrink-0"
+            @click="runPluginAction(plugin, action)"
+          >{{ action.label }}</button>
+        </template>
+      </div>
 
+      <!-- 送信者ボタン: 右端に固定 -->
       <button
         v-if="senderEmail"
         :disabled="isProcessing"
-        class="ml-auto flex items-center gap-1 min-h-[44px] px-2 text-sm text-forest-600 hover:text-forest-800 disabled:opacity-50 cursor-pointer max-w-[40%]"
+        class="flex-shrink-0 flex items-center gap-1 min-h-[44px] px-2 text-sm text-forest-600 hover:text-forest-800 disabled:opacity-50 cursor-pointer max-w-[40%] border-l"
         @click="goToSender"
       >
         <span class="truncate">{{ senderName }}</span>
