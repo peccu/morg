@@ -78,10 +78,12 @@
   - 呼び出し元の各 gmail function がそのまま500を返す
 
 **対応方針**
-1. `google-auth.ts` の `refreshAccessToken()` で `invalid_grant` を検知し専用エラーを throw
-2. `token.ts` の `getValidToken()` でそれを catch して `401` 相当のエラーとして再 throw
-3. 各 gmail function で catch して `{ statusCode: 401 }` を返す
-4. フロント（`useThreads` 等）で 401 を検知 → `useAuthStore().logout()` → ログイン画面へ
+1. `token.ts` の `getValidToken()` で `tokens.refresh_token` が返ってきた場合にセッションへ保存する（現状は無視している）
+   - Googleはリフレッシュ時にまれに新しいリフレッシュトークンを返す場合があり、それを使い続けることで寿命を延ばせる
+2. `google-auth.ts` の `refreshAccessToken()` で `invalid_grant` を検知し専用エラーを throw
+3. `token.ts` の `getValidToken()` でそれを catch して `401` 相当のエラーとして再 throw
+4. 各 gmail function で catch して `{ statusCode: 401 }` を返す
+5. フロント（`useThreads` 等）で 401 を検知 → `useAuthStore().logout()` → ログイン画面へ
 
 **確認方法**
 - Google アカウント設定でアプリのアクセスを手動で取り消した後にAPIを叩く
