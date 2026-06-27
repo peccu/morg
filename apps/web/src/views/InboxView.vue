@@ -2,6 +2,7 @@
 import { ref, computed, watch, defineComponent, h } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useQueryClient } from '@tanstack/vue-query'
+import { useI18n } from 'vue-i18n'
 import { useAuthStore } from '@/stores/auth'
 import { useThreads } from '@/composables/useThreads'
 import { useSenders } from '@/composables/useSenders'
@@ -10,9 +11,17 @@ import ThreadList from '@/components/ThreadList.vue'
 import BulkActionBar from '@/components/BulkActionBar.vue'
 import SenderPanel from '@/components/SenderPanel.vue'
 import { useAppUpdate } from '@/composables/useAppUpdate'
+import { setLocale, SUPPORTED_LOCALES } from '@/i18n'
 import type { ThreadListItem } from '@morg/shared'
 
 const { needRefresh, updateServiceWorker } = useAppUpdate()
+const { t, locale } = useI18n()
+
+function toggleLocale() {
+  const current = locale.value
+  const next = SUPPORTED_LOCALES[(SUPPORTED_LOCALES.indexOf(current as 'ja' | 'en') + 1) % SUPPORTED_LOCALES.length]
+  setLocale(next)
+}
 
 const SidebarItem = defineComponent({
   props: { label: String, active: Boolean },
@@ -105,11 +114,11 @@ function replaceQuery(q: string, sender?: string | null) {
 }
 
 // ──────── ナビゲーションハンドラ ────────
-const navTabs = [
-  { label: '受信', q: 'in:inbox' },
-  { label: '未読', q: 'is:unread' },
-  { label: '送信', q: 'in:sent' },
-]
+const navTabs = computed(() => [
+  { label: t('nav.inbox'), q: 'in:inbox' },
+  { label: t('nav.unread'), q: 'is:unread' },
+  { label: t('nav.sent'), q: 'in:sent' },
+])
 
 function setBaseQuery(q: string) {
   searchInput.value = ''
@@ -176,13 +185,13 @@ async function onLogout() {
           <input
             v-model="searchInput"
             type="search"
-            placeholder="検索..."
+            :placeholder="t('search.placeholder')"
             class="flex-1 border border-forest-700 bg-forest-800 text-forest-100 placeholder-forest-400 rounded px-2 text-sm outline-none focus:ring-1 focus:ring-forest-400 min-w-0 h-9"
           />
           <button
             type="submit"
             class="px-3 h-9 bg-forest-600 text-white text-sm rounded hover:bg-forest-500 cursor-pointer flex-shrink-0"
-          >検索</button>
+          >{{ t('actions.search') }}</button>
         </div>
       </form>
 
@@ -190,7 +199,7 @@ async function onLogout() {
       <button
         class="w-11 h-11 flex items-center justify-center text-forest-300 hover:text-forest-100 cursor-pointer flex-shrink-0 text-base"
         :class="isFetching ? 'animate-spin' : ''"
-        title="再読み込み"
+        :title="t('actions.reload')"
         @click="onReload"
       >↻</button>
 
@@ -207,16 +216,23 @@ async function onLogout() {
           <button
             class="w-full text-left px-4 min-h-[44px] flex items-center text-sm text-gray-700 hover:bg-gray-50 cursor-pointer"
             @click="showMenu = false; router.push({ name: 'plugins' })"
-          >プラグイン</button>
+          >{{ t('nav.plugins') }}</button>
           <button
             class="w-full text-left px-4 min-h-[44px] flex items-center text-sm text-gray-700 hover:bg-gray-50 cursor-pointer"
             @click="showMenu = false; router.push({ name: 'info' })"
-          >情報</button>
+          >{{ t('nav.info') }}</button>
+          <button
+            class="w-full text-left px-4 min-h-[44px] flex items-center justify-between text-sm text-gray-700 hover:bg-gray-50 cursor-pointer"
+            @click="toggleLocale"
+          >
+            <span>{{ t('actions.language') }}</span>
+            <span class="text-xs font-mono text-gray-400 ml-2">{{ locale.toUpperCase() }}</span>
+          </button>
           <div class="border-t" />
           <button
             class="w-full text-left px-4 min-h-[44px] flex items-center text-sm text-red-500 hover:bg-gray-50 cursor-pointer"
             @click="onLogout"
-          >ログアウト</button>
+          >{{ t('nav.logout') }}</button>
         </div>
       </div>
       <!-- メニュー外クリックで閉じる -->
@@ -228,11 +244,11 @@ async function onLogout() {
       v-if="needRefresh"
       class="bg-forest-700 text-forest-100 text-sm px-3 py-2 flex items-center gap-2 flex-shrink-0"
     >
-      <span class="flex-1">新しいバージョンが利用可能です</span>
+      <span class="flex-1">{{ t('status.updateAvailable') }}</span>
       <button
         class="px-3 min-h-[36px] flex items-center bg-forest-500 hover:bg-forest-400 rounded text-xs font-medium cursor-pointer"
         @click="updateServiceWorker()"
-      >今すぐ更新</button>
+      >{{ t('actions.updateNow') }}</button>
     </div>
 
     <div class="flex flex-1 overflow-hidden">
@@ -246,7 +262,7 @@ async function onLogout() {
         />
 
         <template v-if="labels?.length">
-          <div class="mt-2 px-2 text-xs font-semibold text-gray-400 uppercase tracking-wide">ラベル</div>
+          <div class="mt-2 px-2 text-xs font-semibold text-gray-400 uppercase tracking-wide">{{ t('nav.labels') }}</div>
           <SidebarItem
             v-for="l in labels" :key="l.id"
             :label="l.name"
@@ -266,21 +282,21 @@ async function onLogout() {
         <!-- SP タブ（min-h-[44px] で Apple HIG 準拠） -->
         <div class="flex md:hidden border-b">
           <button
-            v-for="t in navTabs" :key="t.q"
+            v-for="tab in navTabs" :key="tab.q"
             class="flex-1 min-h-[44px] flex items-center justify-center text-sm font-medium cursor-pointer"
-            :class="baseQuery === t.q && spTab === 'list' && !activeSender ? 'text-forest-600 border-b-2 border-forest-600' : 'text-gray-500'"
-            @click="setBaseQuery(t.q); spTab = 'list'"
-          >{{ t.label }}</button>
+            :class="baseQuery === tab.q && spTab === 'list' && !activeSender ? 'text-forest-600 border-b-2 border-forest-600' : 'text-gray-500'"
+            @click="setBaseQuery(tab.q); spTab = 'list'"
+          >{{ tab.label }}</button>
           <button
             class="flex-1 min-h-[44px] flex items-center justify-center text-sm font-medium cursor-pointer"
             :class="spTab === 'senders' ? 'text-forest-600 border-b-2 border-forest-600' : 'text-gray-500'"
             @click="spTab = 'senders'"
-          >送信者</button>
+          >{{ t('nav.senders') }}</button>
           <button
             class="flex-1 min-h-[44px] flex items-center justify-center text-sm font-medium cursor-pointer"
             :class="spTab === 'labels' ? 'text-forest-600 border-b-2 border-forest-600' : 'text-gray-500'"
             @click="spTab = 'labels'"
-          >ラベル</button>
+          >{{ t('nav.labels') }}</button>
         </div>
 
         <!-- SP 送信者パネル -->
@@ -305,7 +321,7 @@ async function onLogout() {
 
         <!-- アクティブフィルタ表示 -->
         <div v-if="activeSender" class="flex items-center gap-2 px-3 min-h-[44px] bg-forest-50 border-b text-sm flex-shrink-0">
-          <span class="text-forest-700 truncate">送信者: {{ activeSender }}</span>
+          <span class="text-forest-700 truncate">{{ t('sender.filter', { address: activeSender }) }}</span>
           <button
             class="ml-auto flex-shrink-0 w-11 h-11 flex items-center justify-center rounded-full text-gray-400 hover:bg-forest-100 hover:text-gray-700 cursor-pointer text-base"
             @click="onSenderSelect(null)"

@@ -1,10 +1,12 @@
 <script setup lang="ts">
 import { useRouter } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import { registeredPlugins } from '@/plugins'
 import { usePluginsStore } from '@/stores/plugins'
 
 const router = useRouter()
 const store  = usePluginsStore()
+const { t } = useI18n()
 </script>
 
 <template>
@@ -15,12 +17,12 @@ const store  = usePluginsStore()
         class="w-11 h-11 flex items-center justify-center text-forest-300 hover:text-forest-100 cursor-pointer text-xl"
         @click="router.back()"
       >←</button>
-      <span class="font-bold text-sm text-forest-100">プラグイン</span>
+      <span class="font-bold text-sm text-forest-100">{{ t('plugins.title') }}</span>
     </header>
 
     <main class="flex-1 overflow-y-auto">
       <p class="text-xs text-gray-400 px-4 pt-4 pb-2">
-        有効にしたプラグインのボタンがスレッド詳細のアクションバーに表示されます。
+        {{ t('plugins.hint') }}
       </p>
 
       <div class="flex flex-col gap-3 px-4 pb-6">
@@ -63,7 +65,7 @@ const store  = usePluginsStore()
             >
               <label class="text-xs font-medium text-gray-600">
                 {{ field.label }}
-                <span v-if="field.required" class="text-red-400 ml-0.5">*</span>
+                <span v-if="field.required" class="text-red-400 ml-0.5" :aria-label="t('plugins.required')">*</span>
               </label>
               <input
                 :type="field.type === 'password' ? 'password' : 'text'"
@@ -78,7 +80,7 @@ const store  = usePluginsStore()
 
         <!-- プラグインがまだない場合 -->
         <p v-if="registeredPlugins.length === 0" class="text-center text-sm text-gray-400 py-8">
-          登録されているプラグインはありません
+          {{ t('plugins.empty') }}
         </p>
       </div>
     </main>

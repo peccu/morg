@@ -1,10 +1,12 @@
 <script setup lang="ts">
 import { onMounted } from 'vue'
 import { useRouter } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import { useAuthStore } from '@/stores/auth'
 
 const router = useRouter()
 const auth = useAuthStore()
+const { t } = useI18n()
 
 // PWAホーム画面から開いている場合は navigator.standalone が true
 const isPWA = (navigator as { standalone?: boolean }).standalone === true
@@ -29,12 +31,12 @@ onMounted(async () => {
       </div>
 
       <div>
-        <h1 class="text-xl font-bold text-gray-900">ログイン完了</h1>
+        <h1 class="text-xl font-bold text-gray-900">{{ t('login.success') }}</h1>
         <p v-if="isPWA" class="mt-2 text-sm text-gray-500 leading-relaxed">
-          ホーム画面の <strong>morg</strong> アイコンをタップしてアプリに戻ってください。
+          {{ t('login.pwaInstruction', { app: 'morg' }) }}
         </p>
         <p v-else class="mt-2 text-sm text-gray-500">
-          受信トレイに移動します...
+          {{ t('login.redirecting') }}
         </p>
       </div>
 
@@ -42,7 +44,7 @@ onMounted(async () => {
         href="/inbox"
         class="block w-full py-2.5 bg-forest-600 text-white rounded-lg text-sm font-medium hover:bg-forest-500"
       >
-        受信トレイを開く
+        {{ t('login.openInbox') }}
       </a>
     </div>
   </div>

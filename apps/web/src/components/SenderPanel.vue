@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { useI18n } from 'vue-i18n'
 import type { SenderSummary } from '@/composables/useSenders'
 
 const props = defineProps<{
@@ -6,22 +7,23 @@ const props = defineProps<{
   activeSender: string | null
 }>()
 const emit = defineEmits<{ select: [address: string | null] }>()
+const { t } = useI18n()
 </script>
 
 <template>
   <div class="flex flex-col overflow-hidden">
     <div class="px-3 border-b flex items-center justify-between min-h-[44px]">
-      <span class="text-xs font-semibold text-gray-400 uppercase tracking-wide">送信者</span>
+      <span class="text-xs font-semibold text-gray-400 uppercase tracking-wide">{{ t('sender.title') }}</span>
       <button
         v-if="activeSender"
         class="text-sm text-forest-600 hover:text-forest-800 cursor-pointer min-h-[44px] px-3 flex items-center"
         @click="emit('select', null)"
-      >クリア</button>
+      >{{ t('actions.clear') }}</button>
     </div>
 
     <div class="flex-1 overflow-y-auto min-h-0">
       <div v-if="senders.length === 0" class="px-3 py-4 text-xs text-gray-400 italic">
-        読み込み中...
+        {{ t('status.loading') }}
       </div>
       <button
         v-for="s in senders"
@@ -42,7 +44,7 @@ const emit = defineEmits<{ select: [address: string | null] }>()
         </div>
         <div class="flex flex-col items-end gap-0.5 flex-shrink-0">
           <span class="text-xs text-gray-400">{{ s.count }}</span>
-          <span v-if="s.unread > 0" class="text-xs text-forest-600 font-medium">{{ s.unread }}未読</span>
+          <span v-if="s.unread > 0" class="text-xs text-forest-600 font-medium">{{ t('sender.unread', { n: s.unread }) }}</span>
         </div>
       </button>
     </div>

@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import { useThread } from '@/composables/useThread'
 import { useBulkAction } from '@/composables/useBulkAction'
 import { useMessageAction } from '@/composables/useMessageAction'
@@ -14,6 +15,7 @@ import type { Plugin, ThreadAction } from '@/plugins/types'
 
 const route  = useRoute()
 const router = useRouter()
+const { t, te, locale } = useI18n()
 const id = computed(() => route.params.id as string)
 const { data: thread, isPending, isError, error: threadError } = useThread(id)
 
@@ -26,10 +28,6 @@ const LABEL_SKIP = new Set([
   'UNREAD', 'CATEGORY_PERSONAL', 'CATEGORY_SOCIAL',
   'CATEGORY_PROMOTIONS', 'CATEGORY_UPDATES', 'CATEGORY_FORUMS',
 ])
-const LABEL_NAMES: Record<string, string> = {
-  INBOX: '受信', SENT: '送信済', DRAFT: '下書き',
-  STARRED: 'スター', IMPORTANT: '重要', SPAM: '迷惑', TRASH: 'ゴミ箱',
-}
 const LABEL_STYLE: Record<string, string> = {
   INBOX:     'bg-forest-100 text-forest-700',
   SENT:      'bg-green-100 text-green-700',
@@ -46,7 +44,7 @@ function msgLabels(labelIds: string[]) {
     .filter((id) => !LABEL_SKIP.has(id) && !id.startsWith('CATEGORY_'))
     .map((id) => ({
       id,
-      name: LABEL_NAMES[id] ?? userMap.get(id) ?? id,
+      name: te(`labels.${id}`) ? t(`labels.${id}`) : (userMap.get(id) ?? id),
       style: LABEL_STYLE[id] ?? 'bg-purple-100 text-purple-700',
     }))
 }
@@ -79,7 +77,7 @@ async function runPluginAction(plugin: Plugin, action: ThreadAction) {
       app: appAPI,
     })
   } catch (e) {
-    appAPI.notify(e instanceof Error ? e.message : '操作に失敗しました', 'error')
+    appAPI.notify(e instanceof Error ? e.message : t('actions.operationFailed'), 'error')
   }
 }
 
@@ -137,12 +135,13 @@ function formatDate(raw: string): string {
   if (!raw) return ''
   const d = new Date(raw)
   if (isNaN(d.getTime())) return raw
+  const loc = locale.value === 'en' ? 'en-US' : 'ja-JP'
   const now = new Date()
   const sameYear = d.getFullYear() === now.getFullYear()
   const sameDay = d.toDateString() === now.toDateString()
-  if (sameDay) return d.toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' })
-  if (sameYear) return d.toLocaleDateString('ja-JP', { month: 'numeric', day: 'numeric' })
-  return d.toLocaleDateString('ja-JP', { year: 'numeric', month: 'numeric', day: 'numeric' })
+  if (sameDay) return d.toLocaleTimeString(loc, { hour: '2-digit', minute: '2-digit' })
+  if (sameYear) return d.toLocaleDateString(loc, { month: 'numeric', day: 'numeric' })
+  return d.toLocaleDateString(loc, { year: 'numeric', month: 'numeric', day: 'numeric' })
 }
 
 const firstFrom = computed(() =>
@@ -167,7 +166,7 @@ function goToSender() {
 }
 
 function copyText(text: string) {
-  navigator.clipboard.writeText(text).then(() => appAPI.notify('コピーしました', 'success'))
+  navigator.clipboard.writeText(text).then(() => appAPI.notify(t('status.copied'), 'success'))
 }
 </script>
 
@@ -178,7 +177,7 @@ function copyText(text: string) {
       <button
         class="flex items-center gap-1 text-sm text-gray-500 hover:text-gray-800 cursor-pointer min-h-[44px] pr-2"
         @click="router.back()"
-      >← 戻る</button>
+      >{{ t('actions.back') }}</button>
     </header>
 
     <!-- スレッドレベルアクションバー -->
@@ -191,16 +190,16 @@ function copyText(text: string) {
           <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
           <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
         </svg>
-        <span class="text-sm text-forest-700 font-medium">処理中...</span>
+        <span class="text-sm text-forest-700 font-medium">{{ t('status.processing') }}</span>
       </div>
 
       <!-- ボタン群: 横スクロール可能 -->
       <div class="flex items-center gap-1 px-2 overflow-x-auto flex-1 min-w-0">
-        <span class="text-xs text-gray-400 flex-shrink-0">全体:</span>
-        <button :disabled="isProcessing" class="px-2.5 min-h-[44px] flex items-center text-sm rounded bg-white border hover:bg-gray-100 disabled:opacity-50 cursor-pointer flex-shrink-0" @click="runThreadAction('archive')">アーカイブ</button>
-        <button :disabled="isProcessing" class="px-2.5 min-h-[44px] flex items-center text-sm rounded bg-white border hover:bg-gray-100 disabled:opacity-50 cursor-pointer flex-shrink-0" @click="runThreadAction('trash')">削除</button>
-        <button :disabled="isProcessing" class="px-2.5 min-h-[44px] flex items-center text-sm rounded bg-white border hover:bg-gray-100 disabled:opacity-50 cursor-pointer flex-shrink-0" @click="runThreadAction('markRead')">既読</button>
-        <button :disabled="isProcessing" class="px-2.5 min-h-[44px] flex items-center text-sm rounded bg-white border hover:bg-gray-100 disabled:opacity-50 cursor-pointer flex-shrink-0" @click="runThreadAction('markUnread')">未読</button>
+        <span class="text-xs text-gray-400 flex-shrink-0">{{ t('thread.all') }}</span>
+        <button :disabled="isProcessing" class="px-2.5 min-h-[44px] flex items-center text-sm rounded bg-white border hover:bg-gray-100 disabled:opacity-50 cursor-pointer flex-shrink-0" @click="runThreadAction('archive')">{{ t('actions.archive') }}</button>
+        <button :disabled="isProcessing" class="px-2.5 min-h-[44px] flex items-center text-sm rounded bg-white border hover:bg-gray-100 disabled:opacity-50 cursor-pointer flex-shrink-0" @click="runThreadAction('trash')">{{ t('actions.delete') }}</button>
+        <button :disabled="isProcessing" class="px-2.5 min-h-[44px] flex items-center text-sm rounded bg-white border hover:bg-gray-100 disabled:opacity-50 cursor-pointer flex-shrink-0" @click="runThreadAction('markRead')">{{ t('actions.markRead') }}</button>
+        <button :disabled="isProcessing" class="px-2.5 min-h-[44px] flex items-center text-sm rounded bg-white border hover:bg-gray-100 disabled:opacity-50 cursor-pointer flex-shrink-0" @click="runThreadAction('markUnread')">{{ t('actions.markUnread') }}</button>
 
         <template v-if="pluginThreadActions.length > 0">
           <div class="w-px h-5 bg-gray-300 flex-shrink-0" />
@@ -238,29 +237,29 @@ function copyText(text: string) {
         </svg>
       </div>
 
-      <span class="text-xs text-forest-700 font-medium">{{ checkedMsgIds.size }}件選択</span>
-      <button :disabled="isProcessing" class="px-2.5 min-h-[44px] flex items-center text-sm rounded bg-white border hover:bg-gray-100 disabled:opacity-50 cursor-pointer" @click="runMsgAction('archive')">アーカイブ</button>
-      <button :disabled="isProcessing" class="px-2.5 min-h-[44px] flex items-center text-sm rounded bg-white border hover:bg-gray-100 disabled:opacity-50 cursor-pointer" @click="runMsgAction('trash')">削除</button>
-      <button :disabled="isProcessing" class="px-2.5 min-h-[44px] flex items-center text-sm rounded bg-white border hover:bg-gray-100 disabled:opacity-50 cursor-pointer" @click="runMsgAction('markRead')">既読</button>
-      <button :disabled="isProcessing" class="px-2.5 min-h-[44px] flex items-center text-sm rounded bg-white border hover:bg-gray-100 disabled:opacity-50 cursor-pointer" @click="runMsgAction('markUnread')">未読</button>
+      <span class="text-xs text-forest-700 font-medium">{{ t('thread.msgSelected', { n: checkedMsgIds.size }) }}</span>
+      <button :disabled="isProcessing" class="px-2.5 min-h-[44px] flex items-center text-sm rounded bg-white border hover:bg-gray-100 disabled:opacity-50 cursor-pointer" @click="runMsgAction('archive')">{{ t('actions.archive') }}</button>
+      <button :disabled="isProcessing" class="px-2.5 min-h-[44px] flex items-center text-sm rounded bg-white border hover:bg-gray-100 disabled:opacity-50 cursor-pointer" @click="runMsgAction('trash')">{{ t('actions.delete') }}</button>
+      <button :disabled="isProcessing" class="px-2.5 min-h-[44px] flex items-center text-sm rounded bg-white border hover:bg-gray-100 disabled:opacity-50 cursor-pointer" @click="runMsgAction('markRead')">{{ t('actions.markRead') }}</button>
+      <button :disabled="isProcessing" class="px-2.5 min-h-[44px] flex items-center text-sm rounded bg-white border hover:bg-gray-100 disabled:opacity-50 cursor-pointer" @click="runMsgAction('markUnread')">{{ t('actions.markUnread') }}</button>
       <button class="ml-auto w-11 h-11 flex items-center justify-center text-gray-400 hover:text-gray-600 cursor-pointer" @click="clearMsgs">✕</button>
     </div>
 
     <main class="flex-1 overflow-y-auto min-h-0">
-      <div v-if="isPending" class="p-8 text-center text-gray-400">読み込み中...</div>
+      <div v-if="isPending" class="p-8 text-center text-gray-400">{{ t('status.loading') }}</div>
       <div v-else-if="isError" class="p-8 text-center text-red-400">
-        <p class="font-medium">取得に失敗しました</p>
+        <p class="font-medium">{{ t('status.fetchError') }}</p>
         <pre v-if="threadError?.message" class="mt-2 text-xs text-left whitespace-pre-wrap break-all bg-red-50 rounded p-3 max-w-sm mx-auto">{{ threadError.message }}</pre>
         <button
           v-if="threadError?.message"
           class="mt-2 text-xs px-2 py-1 border border-red-300 rounded hover:bg-red-50 cursor-pointer"
           @click="copyText(threadError?.message ?? '')"
-        >コピー</button>
+        >{{ t('actions.copy') }}</button>
       </div>
 
       <div v-else-if="thread" class="max-w-4xl mx-auto px-3 py-4">
         <h1 class="text-lg font-semibold text-gray-900 mb-4">
-          {{ header(thread.messages[0]?.payload?.headers ?? [], 'Subject') || '(件名なし)' }}
+          {{ header(thread.messages[0]?.payload?.headers ?? [], 'Subject') || t('thread.noSubject') }}
         </h1>
 
         <div class="space-y-4">
@@ -297,7 +296,7 @@ function copyText(text: string) {
                   </time>
                 </div>
                 <p class="text-xs text-gray-500 mt-0.5 truncate">
-                  To: {{ header(msg.payload?.headers ?? [], 'To') }}
+                  {{ t('thread.to') }} {{ header(msg.payload?.headers ?? [], 'To') }}
                 </p>
                 <div v-if="msgLabels(msg.labelIds ?? []).length" class="flex flex-wrap gap-1 mt-1.5">
                   <span
@@ -318,7 +317,7 @@ function copyText(text: string) {
                   class="text-xs border rounded px-2 py-0.5 cursor-pointer flex-shrink-0"
                   :class="scrollMsgIds.has(msg.id) ? 'text-forest-700 border-forest-400 bg-forest-50' : 'text-gray-400 border-gray-300 hover:text-gray-600'"
                   @click.stop="toggleScrollMode(msg.id)"
-                >{{ scrollMsgIds.has(msg.id) ? '縮小' : '↔ 横スクロール' }}</button>
+                >{{ scrollMsgIds.has(msg.id) ? t('thread.shrink') : t('thread.scrollHorizontal') }}</button>
               </div>
               <!-- mail-body.mail-scroll が自身 overflow-x:auto になるため外側ラッパー不要 -->
               <div

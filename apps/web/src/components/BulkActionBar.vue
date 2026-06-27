@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useBulkAction } from '@/composables/useBulkAction'
 import type { BatchAction } from '@morg/shared'
 import type { LabelItem } from '@/composables/useLabels'
@@ -8,6 +9,7 @@ const props = defineProps<{ selectedIds: string[]; labels: LabelItem[] }>()
 const emit = defineEmits<{ clear: []; 'update:isProcessing': [boolean] }>()
 
 const { execute, isProcessing, progress, etaMs } = useBulkAction()
+const { t } = useI18n()
 
 const progressPct = computed(() =>
   progress.value.total > 0
@@ -18,8 +20,8 @@ const progressPct = computed(() =>
 const etaText = computed(() => {
   if (etaMs.value === null) return null
   const secs = Math.ceil(etaMs.value / 1000)
-  if (secs < 60) return `${secs}秒`
-  return `${Math.ceil(secs / 60)}分`
+  if (secs < 60) return t('time.sec', { n: secs })
+  return t('time.min', { n: Math.ceil(secs / 60) })
 })
 const showLabelMenu = ref(false)
 const showDeleteConfirm = ref(false)
@@ -59,8 +61,8 @@ const userLabels = () => props.labels.filter((l) => l.type === 'user')
           <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
           <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
         </svg>
-        <span class="font-medium">{{ progress.processed }}/{{ progress.total }}件処理中</span>
-        <span v-if="etaText" class="ml-auto text-gray-500">残り約{{ etaText }}</span>
+        <span class="font-medium">{{ t('bulk.processing', { processed: progress.processed, total: progress.total }) }}</span>
+        <span v-if="etaText" class="ml-auto text-gray-500">{{ t('bulk.etaLeft', { eta: etaText }) }}</span>
       </div>
       <div class="w-full bg-gray-200 rounded-full h-1.5">
         <div
@@ -72,7 +74,7 @@ const userLabels = () => props.labels.filter((l) => l.type === 'user')
 
     <!-- 1行目: 件数 + ラベル + 閉じるボタン -->
     <div class="flex items-center px-2 pt-1 pb-0.5 relative">
-      <span class="text-forest-700 font-medium text-xs">{{ selectedIds.length }}件選択中</span>
+      <span class="text-forest-700 font-medium text-xs">{{ t('bulk.selectedCount', { n: selectedIds.length }) }}</span>
 
       <!-- ラベル追加ドロップダウン（overflow-x-autoの外に置くためrow1に配置） -->
       <div class="relative ml-auto mr-1">
@@ -80,7 +82,7 @@ const userLabels = () => props.labels.filter((l) => l.type === 'user')
           :disabled="isProcessing || userLabels().length === 0"
           class="px-2 h-8 flex items-center rounded bg-white border hover:bg-gray-50 disabled:opacity-50 cursor-pointer text-xs"
           @click="showLabelMenu = !showLabelMenu"
-        >ラベル ▾</button>
+        >{{ t('bulk.label') }}</button>
         <div
           v-if="showLabelMenu"
           class="absolute right-0 top-full mt-1 z-50 bg-white border rounded shadow-lg min-w-36 py-1"
@@ -107,25 +109,25 @@ const userLabels = () => props.labels.filter((l) => l.type === 'user')
         :disabled="isProcessing"
         class="px-3 h-9 flex items-center rounded bg-white border hover:bg-gray-50 disabled:opacity-50 cursor-pointer text-sm flex-shrink-0"
         @click="run('archive')"
-      >アーカイブ</button>
+      >{{ t('actions.archive') }}</button>
 
       <button
         :disabled="isProcessing"
         class="px-3 h-9 flex items-center rounded bg-white border border-red-200 text-red-600 hover:bg-red-50 disabled:opacity-50 cursor-pointer text-sm flex-shrink-0"
         @click="requestDelete"
-      >削除</button>
+      >{{ t('actions.delete') }}</button>
 
       <button
         :disabled="isProcessing"
         class="px-3 h-9 flex items-center rounded bg-white border hover:bg-gray-50 disabled:opacity-50 cursor-pointer text-sm flex-shrink-0"
         @click="run('markRead')"
-      >既読</button>
+      >{{ t('actions.markRead') }}</button>
 
       <button
         :disabled="isProcessing"
         class="px-3 h-9 flex items-center rounded bg-white border hover:bg-gray-50 disabled:opacity-50 cursor-pointer text-sm flex-shrink-0"
         @click="run('markUnread')"
-      >未読</button>
+      >{{ t('actions.markUnread') }}</button>
     </div>
   </div>
 
@@ -143,17 +145,17 @@ const userLabels = () => props.labels.filter((l) => l.type === 'user')
     @click.self="showDeleteConfirm = false"
   >
     <div class="bg-white rounded-xl shadow-2xl mx-6 p-6 max-w-xs w-full">
-      <h2 class="text-base font-semibold text-gray-900 mb-1">{{ selectedIds.length }}件を削除</h2>
-      <p class="text-sm text-gray-500 mb-5">削除したスレッドはゴミ箱に移動します。よろしいですか？</p>
+      <h2 class="text-base font-semibold text-gray-900 mb-1">{{ t('bulk.deleteTitle', { n: selectedIds.length }) }}</h2>
+      <p class="text-sm text-gray-500 mb-5">{{ t('bulk.deleteConfirm') }}</p>
       <div class="flex gap-2">
         <button
           class="flex-1 min-h-[44px] border rounded text-sm text-gray-600 hover:bg-gray-50 cursor-pointer"
           @click="showDeleteConfirm = false"
-        >キャンセル</button>
+        >{{ t('actions.cancel') }}</button>
         <button
           class="flex-1 min-h-[44px] bg-red-600 hover:bg-red-500 text-white rounded text-sm font-medium cursor-pointer"
           @click="confirmDelete"
-        >削除する</button>
+        >{{ t('actions.doDelete') }}</button>
       </div>
     </div>
   </div>

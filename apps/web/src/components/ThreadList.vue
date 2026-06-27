@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, computed, onUnmounted } from 'vue'
+import { useI18n } from 'vue-i18n'
 import ThreadListItem from './ThreadListItem.vue'
 import type { ThreadListItem as TThreadListItem } from '@morg/shared'
 import { useToast } from '@/composables/useToast'
@@ -28,8 +29,9 @@ const emit = defineEmits<{
 const selectedId = ref<string | null>(null)
 
 const { show: notify } = useToast()
+const { t } = useI18n()
 function copyText(text: string) {
-  navigator.clipboard.writeText(text).then(() => notify('コピーしました', 'success'))
+  navigator.clipboard.writeText(text).then(() => notify(t('status.copied'), 'success'))
 }
 
 const allChecked = computed(
@@ -87,12 +89,12 @@ onUnmounted(() => {
           </svg>
           <div v-else-if="checkedIds.size > 0" class="w-2.5 h-0.5 bg-forest-600 rounded" />
         </div>
-        <span>全て選択</span>
+        <span>{{ t('thread.selectAll') }}</span>
       </button>
 
       <span class="text-xs text-gray-400">
-        {{ threads.length }}件
-        <template v-if="checkedIds.size > 0">中 {{ checkedIds.size }}件選択中</template>
+        {{ t('thread.count', { n: threads.length }) }}
+        <template v-if="checkedIds.size > 0">{{ t('thread.countSelected', { selected: checkedIds.size }) }}</template>
       </span>
 
       <!-- 右端固定エリア：取得状況 + 選択解除 -->
@@ -105,7 +107,7 @@ onUnmounted(() => {
           <button
             class="min-h-[44px] px-2.5 flex items-center text-sm text-gray-500 hover:text-gray-800 border rounded cursor-pointer"
             @click="emit('stopFetch')"
-          >止める</button>
+          >{{ t('actions.stop') }}</button>
         </template>
       </div>
     </div>
@@ -117,21 +119,21 @@ onUnmounted(() => {
       @scroll.passive="onScroll"
     >
       <div v-if="isFetching && threads.length === 0" class="p-8 text-center text-gray-400 text-sm">
-        読み込み中...
+        {{ t('status.loading') }}
       </div>
       <div v-else-if="isError" class="p-6 text-sm">
-        <p class="text-red-500 font-medium">取得に失敗しました</p>
+        <p class="text-red-500 font-medium">{{ t('status.fetchError') }}</p>
         <details class="mt-2 text-gray-400">
-          <summary class="cursor-pointer text-xs">詳細を表示</summary>
+          <summary class="cursor-pointer text-xs">{{ t('thread.showDetail') }}</summary>
           <pre class="mt-1 text-xs whitespace-pre-wrap break-all">{{ (error as Error)?.message }}</pre>
           <button
             class="mt-2 text-xs px-2 py-1 border rounded hover:bg-gray-50 cursor-pointer"
             @click="copyText((error as Error)?.message ?? '')"
-          >コピー</button>
+          >{{ t('actions.copy') }}</button>
         </details>
       </div>
       <div v-else-if="threads.length === 0" class="p-8 text-center text-gray-400 text-sm">
-        メールがありません
+        {{ t('status.noMail') }}
       </div>
       <template v-else>
         <ThreadListItem
@@ -151,12 +153,12 @@ onUnmounted(() => {
             class="px-3 min-h-[44px] flex items-center text-sm text-forest-600 hover:text-forest-800 border rounded cursor-pointer"
             :disabled="isFetching"
             @click="emit('loadMore')"
-          >{{ isFetching ? '読み込み中...' : (autoFetchEnabled ? '続きを取得' : 'もっと読む') }}</button>
+          >{{ isFetching ? t('status.loading') : (autoFetchEnabled ? t('actions.loadMoreSearch') : t('actions.loadMore')) }}</button>
         </div>
 
         <!-- 全件読み込み完了 -->
         <div v-else-if="!hasNextPage" class="py-3 text-center text-xs text-gray-400 border-t">
-          全{{ threads.length }}件
+          {{ t('thread.allCount', { n: threads.length }) }}
         </div>
       </template>
     </div>

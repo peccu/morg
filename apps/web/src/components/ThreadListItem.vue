@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue'
+import { useI18n } from 'vue-i18n'
 import type { ThreadListItem } from '@morg/shared'
 import { useLabels } from '@/composables/useLabels'
 
@@ -7,20 +8,22 @@ const props = defineProps<{ thread: ThreadListItem; selected: boolean; checked: 
 defineEmits<{ click: []; check: [id: string] }>()
 
 const { data: labels } = useLabels()
+const { t, te, locale } = useI18n()
 
 function formatDate(raw: string): string {
   if (!raw) return ''
   const d = new Date(raw)
   if (isNaN(d.getTime())) return raw
+  const loc = locale.value === 'en' ? 'en-US' : 'ja-JP'
   const now = new Date()
   const sameDay =
     d.getFullYear() === now.getFullYear() &&
     d.getMonth() === now.getMonth() &&
     d.getDate() === now.getDate()
-  if (sameDay) return d.toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' })
+  if (sameDay) return d.toLocaleTimeString(loc, { hour: '2-digit', minute: '2-digit' })
   const sameYear = d.getFullYear() === now.getFullYear()
-  if (sameYear) return d.toLocaleDateString('ja-JP', { month: 'short', day: 'numeric' })
-  return d.toLocaleDateString('ja-JP', { year: 'numeric', month: 'short', day: 'numeric' })
+  if (sameYear) return d.toLocaleDateString(loc, { month: 'short', day: 'numeric' })
+  return d.toLocaleDateString(loc, { year: 'numeric', month: 'short', day: 'numeric' })
 }
 
 function senderName(from: string): string {
@@ -32,10 +35,6 @@ const LABEL_SKIP = new Set([
   'UNREAD', 'CATEGORY_PERSONAL', 'CATEGORY_SOCIAL',
   'CATEGORY_PROMOTIONS', 'CATEGORY_UPDATES', 'CATEGORY_FORUMS',
 ])
-const LABEL_NAMES: Record<string, string> = {
-  INBOX: '受信', SENT: '送信済', DRAFT: '下書き',
-  STARRED: 'スター', IMPORTANT: '重要', SPAM: '迷惑', TRASH: 'ゴミ箱',
-}
 const LABEL_STYLE: Record<string, string> = {
   INBOX:     'bg-forest-100 text-forest-700',
   SENT:      'bg-green-100 text-green-700',
@@ -52,7 +51,7 @@ const displayLabels = computed(() => {
     .filter((id) => !LABEL_SKIP.has(id) && !id.startsWith('CATEGORY_'))
     .map((id) => ({
       id,
-      name: LABEL_NAMES[id] ?? userMap.get(id) ?? id,
+      name: te(`labels.${id}`) ? t(`labels.${id}`) : (userMap.get(id) ?? id),
       style: LABEL_STYLE[id] ?? 'bg-purple-100 text-purple-700',
     }))
     .slice(0, 5)
@@ -67,7 +66,7 @@ const displayLabels = computed(() => {
     <!-- チェック領域：タップしやすい広いエリア -->
     <button
       class="flex items-center justify-center w-12 flex-shrink-0 cursor-pointer"
-      :aria-label="checked ? '選択解除' : '選択'"
+      :aria-label="checked ? t('thread.deselect') : t('thread.select')"
       @click.stop="$emit('check', thread.threadId)"
     >
       <div
@@ -94,7 +93,7 @@ const displayLabels = computed(() => {
     >
       <div class="flex items-baseline justify-between gap-2">
         <span class="text-sm truncate" :class="thread.unread ? 'font-semibold text-gray-900' : 'text-gray-700'">
-          {{ senderName(thread.from) || '(送信者不明)' }}
+          {{ senderName(thread.from) || t('thread.noSender') }}
         </span>
         <span class="text-xs text-gray-400 flex-shrink-0">{{ formatDate(thread.date) }}</span>
       </div>
