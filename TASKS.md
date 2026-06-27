@@ -61,36 +61,28 @@
 
 ---
 
-### T003 · トークンリフレッシュ自動化
+### T003 · invalid_grant 時の再ログイン誘導
 
 | 項目 | 内容 |
 |------|------|
-| **ステータス** | 🔍 調査中 |
+| **ステータス** | 📋 対応予定 |
 | **優先度** | 高 |
-| **概要** | `invalid_grant` エラー（トークン期限切れ）が発生した際に自動リフレッシュして継続利用したい |
+| **概要** | `invalid_grant` 発生時に500ではなく401を返し、フロントがログイン画面に誘導するようにする |
 
-**エラー内容**
-```
-500: Token refresh failed: {
-  "error": "invalid_grant",
-  "error_description": "Token has been expired or revoked."
-}
-```
-
-**調査内容**
-- `invalid_grant` はリフレッシュトークン自体が失効した状態（≠ アクセストークン期限切れ）
-- Googleの仕様: リフレッシュトークンは以下で失効する
-  - 6ヶ月間未使用
-  - ユーザーがアプリのアクセス権限を手動で取り消した
-  - パスワード変更
-  - アカウントの安全上の問題
-- アクセストークン（1時間）の自動リフレッシュとは別問題
-- 調査すべき点: netlify functionsのトークン管理実装を確認
+**調査結果**
+- リフレッシュトークン自体を別トークンで更新する手段はOAuth 2.0仕様上存在しない
+- `invalid_grant` = リフレッシュトークンの死亡 → ユーザーの再ログインが必須
+- アプリを定期的に使っていれば `getValidToken()` のリフレッシュ呼び出しが非アクティブタイマーをリセットするため、普通の利用では6ヶ月失効は起きにくい
+- **本当の問題**: `invalid_grant` 時も `500` を返しており、フロントが再ログインを促せない
+  - `packages/functions/src/lib/google-auth.ts:56` の `refreshAccessToken()` が失敗時に `throw new Error('Token refresh failed: ...')` するだけ
+  - 呼び出し元の各 gmail function がそのまま500を返す
 
 **対応方針**
-- TBD（実装確認後に記入）
-- 方針候補A: `invalid_grant` 検知時にフロントへ再ログイン要求を返す（現実的）
-- 方針候補B: 自動再認証フロー（実装複雑・セキュリティ考慮要）
+1. `google-auth.ts` の `refreshAccessToken()` で `invalid_grant` を検知し専用エラーを throw
+2. `token.ts` の `getValidToken()` でそれを catch して `401` 相当のエラーとして再 throw
+3. 各 gmail function で catch して `{ statusCode: 401 }` を返す
+4. フロント（`useThreads` 等）で 401 を検知 → `useAuthStore().logout()` → ログイン画面へ
 
 **確認方法**
-- リフレッシュトークンを手動で無効化してAPIを叩き、適切なエラー（401/ログイン誘導）が返ること
+- Google アカウント設定でアプリのアクセスを手動で取り消した後にAPIを叩く
+- `500` ではなく `401` が返り、アプリがログイン画面に遷移すること
