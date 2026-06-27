@@ -15,6 +15,9 @@ vi.mock('../src/lib/cookie', () => ({
 vi.mock('../src/lib/token', () => ({
   getValidToken: (s: { accessToken: string }) =>
     Promise.resolve({ token: s.accessToken, updatedSession: null }),
+  InvalidGrantError: class InvalidGrantError extends Error {
+    constructor() { super('invalid_grant') }
+  },
 }))
 
 const mockEvent = (body: object): HandlerEvent =>
