@@ -15,7 +15,7 @@ import type { Plugin, ThreadAction } from '@/plugins/types'
 const route  = useRoute()
 const router = useRouter()
 const id = computed(() => route.params.id as string)
-const { data: thread, isPending, isError } = useThread(id)
+const { data: thread, isPending, isError, error: threadError } = useThread(id)
 
 // スレッド全体へのアクション
 const { execute: execThread, isProcessing: threadProcessing } = useBulkAction()
@@ -244,7 +244,15 @@ function goToSender() {
 
     <main class="flex-1 overflow-y-auto min-h-0">
       <div v-if="isPending" class="p-8 text-center text-gray-400">読み込み中...</div>
-      <div v-else-if="isError" class="p-8 text-center text-red-400">取得に失敗しました</div>
+      <div v-else-if="isError" class="p-8 text-center text-red-400">
+        <p class="font-medium">取得に失敗しました</p>
+        <pre v-if="threadError?.message" class="mt-2 text-xs text-left whitespace-pre-wrap break-all bg-red-50 rounded p-3 max-w-sm mx-auto">{{ threadError.message }}</pre>
+        <button
+          v-if="threadError?.message"
+          class="mt-2 text-xs px-2 py-1 border border-red-300 rounded hover:bg-red-50 cursor-pointer"
+          @click="navigator.clipboard.writeText(threadError?.message ?? '')"
+        >コピー</button>
+      </div>
 
       <div v-else-if="thread" class="max-w-4xl mx-auto px-3 py-4">
         <h1 class="text-lg font-semibold text-gray-900 mb-4">

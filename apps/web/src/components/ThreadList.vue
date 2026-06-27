@@ -118,6 +118,10 @@ onUnmounted(() => {
         <details class="mt-2 text-gray-400">
           <summary class="cursor-pointer text-xs">詳細を表示</summary>
           <pre class="mt-1 text-xs whitespace-pre-wrap break-all">{{ (error as Error)?.message }}</pre>
+          <button
+            class="mt-2 text-xs px-2 py-1 border rounded hover:bg-gray-50 cursor-pointer"
+            @click="navigator.clipboard.writeText((error as Error)?.message ?? '')"
+          >コピー</button>
         </details>
       </div>
       <div v-else-if="threads.length === 0" class="p-8 text-center text-gray-400 text-sm">
