@@ -223,7 +223,7 @@ async function onLogout() {
           >{{ t('nav.info') }}</button>
           <button
             class="w-full text-left px-4 min-h-[44px] flex items-center justify-between text-sm text-gray-700 hover:bg-gray-50 cursor-pointer"
-            @click="toggleLocale"
+            @click="toggleLocale(); showMenu = false"
           >
             <span>{{ t('actions.language') }}</span>
             <span class="text-xs font-mono text-gray-400 ml-2">{{ locale.toUpperCase() }}</span>
