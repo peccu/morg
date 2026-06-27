@@ -1,7 +1,7 @@
 import type { Handler } from '@netlify/functions'
 import type { MessageOperationRequest } from '@morg/shared'
 import { getSession, makeSessionCookie } from './lib/cookie.js'
-import { getValidToken } from './lib/token.js'
+import { getValidToken, InvalidGrantError } from './lib/token.js'
 
 const BASE = 'https://gmail.googleapis.com/gmail/v1/users/me'
 
@@ -96,6 +96,9 @@ export const handler: Handler = async (event) => {
     const status = result.failed > 0 ? 207 : 200
     return { statusCode: status, headers, body: JSON.stringify({ ok: result.failed === 0, ...result }) }
   } catch (err) {
+    if (err instanceof InvalidGrantError) {
+      return { statusCode: 401, body: JSON.stringify({ error: 'Session expired. Please log in again.' }) }
+    }
     console.error('gmail-message-batch error:', err)
     return { statusCode: 500, body: JSON.stringify({ error: 'Message operation failed' }) }
   }

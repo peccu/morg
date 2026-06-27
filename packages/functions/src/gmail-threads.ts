@@ -1,6 +1,6 @@
 import type { Handler } from '@netlify/functions'
 import { getSession, makeSessionCookie } from './lib/cookie.js'
-import { getValidToken } from './lib/token.js'
+import { getValidToken, InvalidGrantError } from './lib/token.js'
 import { listThreadsWithMetadata } from './lib/gmail.js'
 
 export const handler: Handler = async (event) => {
@@ -23,6 +23,9 @@ export const handler: Handler = async (event) => {
 
     return { statusCode: 200, headers, body: JSON.stringify(data) }
   } catch (err) {
+    if (err instanceof InvalidGrantError) {
+      return { statusCode: 401, body: JSON.stringify({ error: 'Session expired. Please log in again.' }) }
+    }
     const message = err instanceof Error ? err.message : String(err)
     console.error('gmail-threads error:', message)
     return { statusCode: 500, body: JSON.stringify({ error: message }) }
