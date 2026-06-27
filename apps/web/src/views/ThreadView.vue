@@ -167,7 +167,7 @@ function goToSender() {
 }
 
 function copyText(text: string) {
-  navigator.clipboard.writeText(text)
+  navigator.clipboard.writeText(text).then(() => appAPI.notify('コピーしました', 'success'))
 }
 </script>
 

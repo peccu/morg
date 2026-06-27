@@ -2,6 +2,7 @@
 import { ref, computed, onUnmounted } from 'vue'
 import ThreadListItem from './ThreadListItem.vue'
 import type { ThreadListItem as TThreadListItem } from '@morg/shared'
+import { useToast } from '@/composables/useToast'
 
 const props = defineProps<{
   threads: TThreadListItem[]
@@ -26,8 +27,9 @@ const emit = defineEmits<{
 
 const selectedId = ref<string | null>(null)
 
+const { show: notify } = useToast()
 function copyText(text: string) {
-  navigator.clipboard.writeText(text)
+  navigator.clipboard.writeText(text).then(() => notify('コピーしました', 'success'))
 }
 
 const allChecked = computed(
