@@ -28,7 +28,11 @@ async function checkUpdate() {
   checked.value = false
   try {
     const reg = await navigator.serviceWorker.getRegistration()
-    if (reg) await reg.update()
+    if (reg) {
+      await reg.update()
+      // SW が waiting 状態に入り needRefresh へ伝播するまで待つ
+      await new Promise<void>(resolve => setTimeout(resolve, 1000))
+    }
   } catch {
     // ServiceWorker 未対応環境では無視
   } finally {
