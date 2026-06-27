@@ -1,18 +1,32 @@
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
 import { useAuthStore } from '@/stores/auth'
+import { setLocale, SUPPORTED_LOCALES } from '@/i18n'
 
 const auth = useAuthStore()
-const { t } = useI18n()
+const { t, locale } = useI18n()
 
 const GITHUB_URL = 'https://github.com/peccu/morg'
+
+function toggleLocale() {
+  const next = SUPPORTED_LOCALES[(SUPPORTED_LOCALES.indexOf(locale.value as 'ja' | 'en') + 1) % SUPPORTED_LOCALES.length]
+  setLocale(next)
+}
 </script>
 
 <template>
   <div class="min-h-dvh bg-forest-50 flex flex-col">
 
+    <!-- 言語切替 -->
+    <nav class="flex justify-end px-4 pt-3">
+      <button
+        class="text-xs font-mono text-forest-600 hover:text-forest-800 px-2.5 py-1 rounded border border-forest-200 hover:bg-forest-100 cursor-pointer transition-colors"
+        @click="toggleLocale"
+      >{{ locale.toUpperCase() }}</button>
+    </nav>
+
     <!-- ヒーロー -->
-    <main class="flex-1 flex flex-col items-center px-4 pt-12 pb-8">
+    <main class="flex-1 flex flex-col items-center px-4 pt-6 pb-8">
       <div class="w-full max-w-sm space-y-8">
 
         <!-- アプリ名 + キャッチコピー -->
@@ -36,6 +50,7 @@ const GITHUB_URL = 'https://github.com/peccu/morg'
           <!-- ログインボタン -->
           <button
             v-else
+            data-testid="login-btn"
             class="w-full flex items-center justify-center gap-3 px-4 py-3 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 transition-colors cursor-pointer disabled:opacity-50"
             :disabled="auth.isLoggingIn"
             @click="auth.login()"

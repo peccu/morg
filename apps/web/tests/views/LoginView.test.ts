@@ -1,10 +1,12 @@
 import { describe, test, expect, vi, beforeEach } from 'vitest'
 import { mount, flushPromises } from '@vue/test-utils'
 import { createPinia, setActivePinia } from 'pinia'
+import { setLocale } from '@/i18n'
 import LoginView from '@/views/LoginView.vue'
 
 beforeEach(() => {
   setActivePinia(createPinia())
+  setLocale('ja')
   vi.restoreAllMocks()
 })
 
@@ -32,7 +34,7 @@ describe('LoginView', () => {
     vi.stubGlobal('location', mockLocation)
 
     const wrapper = mount(LoginView)
-    const clickPromise = wrapper.find('button').trigger('click')
+    const clickPromise = wrapper.find('[data-testid="login-btn"]').trigger('click')
 
     // クリック直後（fetch完了前）はスピナーが表示される
     await wrapper.vm.$nextTick()
@@ -54,7 +56,7 @@ describe('LoginView', () => {
     }))
 
     const wrapper = mount(LoginView)
-    await wrapper.find('button').trigger('click')
+    await wrapper.find('[data-testid="login-btn"]').trigger('click')
     await flushPromises()
 
     expect(wrapper.text()).toContain('ログインに失敗しました')
@@ -69,10 +71,21 @@ describe('LoginView', () => {
     }))
 
     const wrapper = mount(LoginView)
-    await wrapper.find('button').trigger('click')
+    await wrapper.find('[data-testid="login-btn"]').trigger('click')
     await flushPromises()
 
     expect(wrapper.text()).toContain('ログインに失敗しました')
     expect(wrapper.text()).toContain('サーバーレスポンスが不正です')
+  })
+
+  test('language toggle button switches locale', async () => {
+    const wrapper = mount(LoginView)
+    // 初期状態は JA
+    const langBtn = wrapper.find('nav button')
+    expect(langBtn.text()).toBe('JA')
+
+    await langBtn.trigger('click')
+    expect(langBtn.text()).toBe('EN')
+    expect(wrapper.text()).toContain('Sign in with Google')
   })
 })
