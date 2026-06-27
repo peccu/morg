@@ -2,6 +2,7 @@ import { ref } from 'vue'
 import { useQueryClient } from '@tanstack/vue-query'
 import type { BatchAction } from '@morg/shared'
 import { applyThreadCacheUpdate } from '@/lib/thread-cache'
+import { apiFetch } from '@/lib/api-fetch'
 
 // Netlify 関数の10秒タイムアウトに収まるよう1リクエストあたりの上限を設定
 // 20件 / 10並列 = 2バッチ × ~300ms ≈ 0.6秒 → 細かく進捗フィードバック
@@ -30,7 +31,7 @@ export function useBulkAction() {
         const chunk = threadIds.slice(i, i + CHUNK_SIZE)
         const start = Date.now()
 
-        const res = await fetch('/.netlify/functions/gmail-batch', {
+        const res = await apiFetch('/.netlify/functions/gmail-batch', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ threadIds: chunk, action, labelId }),

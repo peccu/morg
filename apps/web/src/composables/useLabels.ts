@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/vue-query'
 import type { GmailLabel } from '@morg/shared'
+import { apiFetch } from '@/lib/api-fetch'
 
 // システムラベルの表示名マッピング
 const SYSTEM_LABEL_NAMES: Record<string, string> = {
@@ -23,7 +24,7 @@ export interface LabelItem {
 }
 
 async function fetchLabels(): Promise<GmailLabel[]> {
-  const res = await fetch('/.netlify/functions/gmail-labels')
+  const res = await apiFetch('/.netlify/functions/gmail-labels')
   if (!res.ok) {
     const body = await res.json().catch(() => ({})) as { error?: string }
     throw new Error(body.error ?? `HTTP ${res.status}`)

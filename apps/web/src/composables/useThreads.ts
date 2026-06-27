@@ -1,11 +1,12 @@
 import { useInfiniteQuery } from '@tanstack/vue-query'
 import type { ThreadListResponse } from '@morg/shared'
 import type { Ref } from 'vue'
+import { apiFetch } from '@/lib/api-fetch'
 
 async function fetchThreads(q: string, pageToken?: string): Promise<ThreadListResponse> {
   const params = new URLSearchParams({ q })
   if (pageToken) params.set('pageToken', pageToken)
-  const res = await fetch(`/.netlify/functions/gmail-threads?${params}`)
+  const res = await apiFetch(`/.netlify/functions/gmail-threads?${params}`)
   if (!res.ok) {
     const body = await res.json().catch(() => ({})) as { error?: string }
     throw new Error(`${res.status}: ${body.error ?? 'Unknown error'}`)

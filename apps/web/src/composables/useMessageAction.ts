@@ -2,6 +2,7 @@ import { ref } from 'vue'
 import { useQueryClient } from '@tanstack/vue-query'
 import type { BatchAction } from '@morg/shared'
 import { applyThreadCacheUpdate } from '@/lib/thread-cache'
+import { apiFetch } from '@/lib/api-fetch'
 
 export function useMessageAction(threadId: () => string) {
   const queryClient = useQueryClient()
@@ -13,7 +14,7 @@ export function useMessageAction(threadId: () => string) {
     isProcessing.value = true
     error.value = null
     try {
-      const res = await fetch('/.netlify/functions/gmail-message-batch', {
+      const res = await apiFetch('/.netlify/functions/gmail-message-batch', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ messageIds, action, labelId }),
