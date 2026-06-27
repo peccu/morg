@@ -165,6 +165,10 @@ async function runMsgAction(action: BatchAction) {
 function goToSender() {
   router.push({ name: 'inbox', query: { sender: senderEmail.value } })
 }
+
+function copyText(text: string) {
+  navigator.clipboard.writeText(text)
+}
 </script>
 
 <template>
@@ -250,7 +254,7 @@ function goToSender() {
         <button
           v-if="threadError?.message"
           class="mt-2 text-xs px-2 py-1 border border-red-300 rounded hover:bg-red-50 cursor-pointer"
-          @click="navigator.clipboard.writeText(threadError?.message ?? '')"
+          @click="copyText(threadError?.message ?? '')"
         >コピー</button>
       </div>
 

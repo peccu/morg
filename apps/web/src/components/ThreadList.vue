@@ -26,6 +26,10 @@ const emit = defineEmits<{
 
 const selectedId = ref<string | null>(null)
 
+function copyText(text: string) {
+  navigator.clipboard.writeText(text)
+}
+
 const allChecked = computed(
   () => props.threads.length > 0 && props.threads.every((t) => props.checkedIds.has(t.threadId)),
 )
@@ -120,7 +124,7 @@ onUnmounted(() => {
           <pre class="mt-1 text-xs whitespace-pre-wrap break-all">{{ (error as Error)?.message }}</pre>
           <button
             class="mt-2 text-xs px-2 py-1 border rounded hover:bg-gray-50 cursor-pointer"
-            @click="navigator.clipboard.writeText((error as Error)?.message ?? '')"
+            @click="copyText((error as Error)?.message ?? '')"
           >コピー</button>
         </details>
       </div>
