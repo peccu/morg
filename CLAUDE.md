@@ -20,10 +20,12 @@ Vue 3 PWA のメール整理アプリ（Gmail API連携）。
 
 ## 開発ルール
 
-- テスト: `bun run --cwd apps/web test --run`
-- 型チェック: `bun run --cwd apps/web typecheck`
 - コミットはmainに直接。細かく・日本語不可（英語のコミットメッセージ）
 - `git add -A` / `git add .` は禁止。変更ファイルを個別にステージング
+- **pushする前に必ずテストと型チェックを両方実行し、通過を確認してからpushする**:
+  ```bash
+  bun run --cwd apps/web test --run && bun run --cwd apps/web typecheck
+  ```
 
 ## ファイル構成（主要）
 

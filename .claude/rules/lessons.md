@@ -72,3 +72,17 @@ vi.mock('@/composables/useBulkAction', () => ({
 
 **対策**: スクロール対象コンテナを「直接の子要素がはみ出す要素」に設定する。
 外側ラッパーに `overflow-x: auto` を置くのではなく、`.mail-body.mail-scroll` 自身に付与する。
+
+---
+
+## L006 · テストが通らない状態でpushしてCIが失敗した
+
+**発生**: コード変更後にテスト・型チェックを実行せずpushし、CIで失敗して無駄な待ち時間が発生した
+
+**症状**: GitHub Actions の CI が失敗してからエラーに気づく
+
+**対策**: **pushの直前に必ずテストと型チェックを実行する**:
+```bash
+bun run --cwd apps/web test --run && bun run --cwd apps/web typecheck
+```
+両方通過してからpushする。失敗していたらpushしない。
