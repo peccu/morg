@@ -42,6 +42,10 @@ export async function exchangeCodeForTokens(code: string): Promise<TokenResponse
   return res.json() as Promise<TokenResponse>
 }
 
+export class InvalidGrantError extends Error {
+  constructor() { super('invalid_grant') }
+}
+
 export async function refreshAccessToken(refreshToken: string): Promise<TokenResponse> {
   const res = await fetch('https://oauth2.googleapis.com/token', {
     method: 'POST',
@@ -55,6 +59,12 @@ export async function refreshAccessToken(refreshToken: string): Promise<TokenRes
   })
   if (!res.ok) {
     const text = await res.text()
+    try {
+      const json = JSON.parse(text) as { error?: string }
+      if (json.error === 'invalid_grant') throw new InvalidGrantError()
+    } catch (e) {
+      if (e instanceof InvalidGrantError) throw e
+    }
     throw new Error(`Token refresh failed: ${text}`)
   }
   return res.json() as Promise<TokenResponse>

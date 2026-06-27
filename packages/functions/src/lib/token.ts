@@ -1,4 +1,6 @@
-import { refreshAccessToken } from './google-auth.js'
+import { refreshAccessToken, InvalidGrantError } from './google-auth.js'
+
+export { InvalidGrantError }
 
 interface Session {
   accessToken: string
@@ -22,6 +24,8 @@ export async function getValidToken(session: Session): Promise<TokenResult> {
     ...session,
     accessToken: tokens.access_token,
     expiresAt: Date.now() + tokens.expires_in * 1000,
+    // Googleがリフレッシュ時に新しいリフレッシュトークンを返した場合は更新する
+    ...(tokens.refresh_token ? { refreshToken: tokens.refresh_token } : {}),
   }
   return { token: tokens.access_token, updatedSession }
 }
