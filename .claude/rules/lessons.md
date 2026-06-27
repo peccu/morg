@@ -81,8 +81,30 @@ vi.mock('@/composables/useBulkAction', () => ({
 
 **症状**: GitHub Actions の CI が失敗してからエラーに気づく
 
-**対策**: **pushの直前に必ずテストと型チェックを実行する**:
+**対策**: **pushの直前に必ず functions と web 両方のテストと型チェックを実行する**:
 ```bash
-bun run --cwd apps/web test --run && bun run --cwd apps/web typecheck
+bun run --cwd packages/functions test --run && bun run --cwd apps/web test --run && bun run --cwd apps/web typecheck
 ```
 両方通過してからpushする。失敗していたらpushしない。
+
+---
+
+## L007 · vitest でモック対象モジュールに新しいエクスポートを追加したらモックも更新が必要
+
+**発生**: T003で `InvalidGrantError` を `token.ts` に追加したが、functions テストの `vi.mock('../src/lib/token', ...)` に含めなかったためCIが失敗した
+
+**症状**:
+```
+Error: [vitest] No "InvalidGrantError" export is defined on the "../src/lib/token" mock.
+```
+
+**対策**: モック対象モジュールにエクスポートを追加したら、そのモジュールをモックしているテストファイルを `grep` で洗い出して全て更新する:
+```bash
+grep -rn "mock.*lib/token" packages/functions/tests/
+```
+クラスのモックは以下のように書く:
+```ts
+InvalidGrantError: class InvalidGrantError extends Error {
+  constructor() { super('invalid_grant') }
+},
+```
