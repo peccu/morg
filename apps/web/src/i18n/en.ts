@@ -111,4 +111,18 @@ export default {
   search: {
     placeholder: 'Search...',
   },
+  landing: {
+    tagline: 'Organize Gmail comfortably on mobile',
+    desc: 'A PWA app for Gmail on your smartphone. Add to home screen and use like a native app.',
+    featuresTitle: 'Features',
+    bulk: 'Bulk Actions',
+    bulkDesc: 'Archive, delete, and mark emails as read in one go. Clear your inbox fast.',
+    pwa: 'Mobile PWA',
+    pwaDesc: 'Add to home screen and use like a native app on iOS & Android.',
+    plugin: 'Plugin Support',
+    pluginDesc: 'Add custom thread actions via plugins, including Webhook triggers.',
+    oss: 'Open Source',
+    ossDesc: 'Deploy on your own Google Cloud project. Source code available on GitHub.',
+    github: 'View on GitHub',
+  },
 }

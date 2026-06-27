@@ -111,4 +111,18 @@ export default {
   search: {
     placeholder: '検索...',
   },
+  landing: {
+    tagline: 'Gmail をモバイルで快適に整理',
+    desc: 'スマートフォン向けの Gmail 整理PWAアプリ。ホーム画面に追加して使えます。',
+    featuresTitle: '主な機能',
+    bulk: '一括操作',
+    bulkDesc: 'アーカイブ・削除・既読をまとめて処理。大量のメールも素早く片付けられます。',
+    pwa: 'モバイルPWA',
+    pwaDesc: 'ホーム画面に追加してネイティブアプリのように使えます。',
+    plugin: 'プラグイン拡張',
+    pluginDesc: 'Webhook送信など、カスタムアクションをプラグインで追加できます。',
+    oss: 'オープンソース',
+    ossDesc: '自分のGoogle Cloudでデプロイして使えます。コードはGitHubで公開中。',
+    github: 'GitHub で見る',
+  },
 }

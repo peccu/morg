@@ -9,10 +9,10 @@ beforeEach(() => {
 })
 
 describe('LoginView', () => {
-  test('renders app name and subtitle', () => {
+  test('renders app name and landing content', () => {
     const wrapper = mount(LoginView)
     expect(wrapper.text()).toContain('morg')
-    expect(wrapper.text()).toContain('Mail Organizer')
+    expect(wrapper.text()).toContain('Gmail')
   })
 
   test('renders Google login button', () => {
