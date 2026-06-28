@@ -1,9 +1,11 @@
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
+import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { setLocale, SUPPORTED_LOCALES } from '@/i18n'
 
 const auth = useAuthStore()
+const router = useRouter()
 const { t, locale } = useI18n()
 
 const GITHUB_URL = 'https://github.com/peccu/morg'
@@ -38,8 +40,22 @@ function toggleLocale() {
 
         <!-- ログインカード -->
         <div class="bg-white rounded-2xl shadow-sm p-6 space-y-4">
+          <!-- ログイン済み: 受信トレイへ -->
+          <div v-if="auth.isAuthenticated" class="space-y-3">
+            <button
+              class="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-lg text-sm font-medium text-white bg-forest-600 hover:bg-forest-500 transition-colors cursor-pointer"
+              @click="router.push({ name: 'inbox' })"
+            >
+              {{ t('login.openInbox') }}
+              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
+              </svg>
+            </button>
+            <p class="text-xs text-gray-400 text-center">{{ t('login.success') }}</p>
+          </div>
+
           <!-- ログイン中スピナー -->
-          <div v-if="auth.isLoggingIn" class="flex flex-col items-center gap-3 py-4">
+          <div v-else-if="auth.isLoggingIn" class="flex flex-col items-center gap-3 py-4">
             <svg class="w-8 h-8 animate-spin text-forest-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
               <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
               <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />

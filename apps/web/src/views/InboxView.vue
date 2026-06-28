@@ -178,7 +178,11 @@ async function onLogout() {
   <div class="h-dvh flex flex-col bg-white overflow-hidden">
     <!-- ヘッダー -->
     <header class="bg-forest-900 border-b border-forest-800 flex items-center gap-1.5 px-2 flex-shrink-0 safe-top h-[52px]">
-      <span class="font-bold text-sm w-10 flex-shrink-0 text-forest-100">morg</span>
+      <button
+        class="font-bold text-sm w-10 flex-shrink-0 text-forest-100 hover:text-white cursor-pointer text-left"
+        :title="t('app.tagline')"
+        @click="router.push({ name: 'login' })"
+      >morg</button>
 
       <form class="flex-1 flex items-center" @submit.prevent="onSearch">
         <div class="flex gap-1 w-full items-center">
