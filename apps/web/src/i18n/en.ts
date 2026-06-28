@@ -83,7 +83,7 @@ export default {
   bulk: {
     selectedCount: '{n} selected',
     processing: '{processed}/{total} processed',
-    etaLeft: 'ETA ~{eta}',
+    etaLeft: '~{eta} remaining',
     label: 'Label ▾',
     deleteTitle: 'Delete {n} threads',
     deleteConfirm: 'Threads will be moved to trash. Continue?',
