@@ -184,7 +184,7 @@ async function onLogout() {
         @click="router.push({ name: 'login' })"
       >morg</button>
 
-      <form class="flex-1 flex items-center" @submit.prevent="onSearch">
+      <form class="flex-1 flex items-center min-w-0" @submit.prevent="onSearch">
         <div class="flex gap-1 w-full items-center">
           <input
             v-model="searchInput"
@@ -194,8 +194,13 @@ async function onLogout() {
           />
           <button
             type="submit"
-            class="px-3 h-9 bg-forest-600 text-white text-sm rounded hover:bg-forest-500 cursor-pointer flex-shrink-0"
-          >{{ t('actions.search') }}</button>
+            :aria-label="t('actions.search')"
+            class="w-9 h-9 bg-forest-600 text-white rounded hover:bg-forest-500 cursor-pointer flex-shrink-0 flex items-center justify-center"
+          >
+            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
+          </button>
         </div>
       </form>
 
