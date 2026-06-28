@@ -122,7 +122,7 @@ export default {
     plugin: 'Plugin Support',
     pluginDesc: 'Add custom thread actions via plugins, including Webhook triggers.',
     oss: 'Open Source',
-    ossDesc: 'Deploy on your own Google Cloud project. Source code available on GitHub.',
+    ossDesc: 'Open source on GitHub. Self-host on Netlify with your own Google OAuth credentials.',
     github: 'View on GitHub',
   },
 }

@@ -122,7 +122,7 @@ export default {
     plugin: 'プラグイン拡張',
     pluginDesc: 'Webhook送信など、カスタムアクションをプラグインで追加できます。',
     oss: 'オープンソース',
-    ossDesc: '自分のGoogle Cloudでデプロイして使えます。コードはGitHubで公開中。',
+    ossDesc: 'GitHubで公開中。NetlifyとGoogle OAuthを用意すれば自分でホストして使えます。',
     github: 'GitHub で見る',
   },
 }
