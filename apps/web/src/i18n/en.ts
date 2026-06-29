@@ -111,6 +111,10 @@ export default {
   search: {
     placeholder: 'Search...',
   },
+  queue: {
+    waiting: 'queued',
+    done: 'done',
+  },
   landing: {
     tagline: 'Organize Gmail comfortably on mobile',
     desc: 'A PWA app for Gmail on your smartphone. Add to home screen and use like a native app.',

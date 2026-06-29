@@ -1,20 +1,29 @@
 <script setup lang="ts">
-import { onMounted } from 'vue'
+import { computed, onMounted } from 'vue'
 import { useAuthStore } from '@/stores/auth'
+import { useTaskQueueStore } from '@/stores/taskQueue'
 import { useToast } from '@/composables/useToast'
+import TaskQueueBanner from '@/components/TaskQueueBanner.vue'
 
 const auth = useAuthStore()
 onMounted(() => auth.checkAuth())
 
 const { toasts, dismiss } = useToast()
+const taskQueue = useTaskQueueStore()
+const toastBottom = computed(() => taskQueue.tasks.length > 0 ? '56px' : '16px')
 </script>
 
 <template>
   <RouterView />
 
+  <TaskQueueBanner />
+
   <!-- グローバル Toast 通知 -->
   <Teleport to="body">
-    <div class="fixed bottom-4 left-1/2 -translate-x-1/2 z-[200] flex flex-col gap-2 items-center pointer-events-none">
+    <div
+      class="fixed left-1/2 -translate-x-1/2 z-[200] flex flex-col gap-2 items-center pointer-events-none transition-[bottom] duration-200"
+      :style="{ bottom: toastBottom }"
+    >
       <TransitionGroup name="toast">
         <div
           v-for="toast in toasts"

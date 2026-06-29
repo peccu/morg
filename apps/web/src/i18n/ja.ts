@@ -111,6 +111,10 @@ export default {
   search: {
     placeholder: '検索...',
   },
+  queue: {
+    waiting: '待機中',
+    done: '完了',
+  },
   landing: {
     tagline: 'Gmail をモバイルで快適に整理',
     desc: 'スマートフォン向けの Gmail 整理PWAアプリ。ホーム画面に追加して使えます。',

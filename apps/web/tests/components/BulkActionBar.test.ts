@@ -1,20 +1,17 @@
 import { describe, test, expect, vi, beforeEach } from 'vitest'
-import { ref } from 'vue'
 import { shallowMount } from '@vue/test-utils'
 import { createPinia, setActivePinia } from 'pinia'
 
-const mockExecute = vi.fn()
-const mockIsProcessing = ref(false)
-const mockProgress = ref({ processed: 0, total: 0 })
-const mockEtaMs = ref<number | null>(null)
-vi.mock('@/composables/useBulkAction', () => ({
-  useBulkAction: () => ({
-    execute: mockExecute,
-    isProcessing: mockIsProcessing,
-    error: ref(null),
-    progress: mockProgress,
-    etaMs: mockEtaMs,
+const mockEnqueue = vi.fn()
+vi.mock('@/stores/taskQueue', () => ({
+  useTaskQueueStore: () => ({
+    enqueue: mockEnqueue,
+    tasks: [],
   }),
+}))
+
+vi.mock('vue-router', () => ({
+  useRoute: vi.fn().mockReturnValue({ fullPath: '/inbox' }),
 }))
 
 import BulkActionBar from '@/components/BulkActionBar.vue'
@@ -37,10 +34,6 @@ describe('BulkActionBar', () => {
   beforeEach(() => {
     setActivePinia(createPinia())
     vi.clearAllMocks()
-    mockExecute.mockResolvedValue(undefined)
-    mockIsProcessing.value = false
-    mockProgress.value = { processed: 0, total: 0 }
-    mockEtaMs.value = null
   })
 
   test('selectedIds が空のとき何も表示しない', () => {
@@ -56,77 +49,51 @@ describe('BulkActionBar', () => {
   test('閉じるボタンが1行目にある', () => {
     const wrapper = mountBar()
     const rows = wrapper.findAll('.flex')
-    // 1行目（件数行）に ✕ ボタンが含まれる
     const firstRow = rows.find((r) => r.text().includes('件選択中'))
     expect(firstRow?.text()).toContain('✕')
   })
 
-  test('アクションボタンが2行目（overflow-x-auto コンテナ）にある', () => {
-    const wrapper = mountBar()
-    const scrollRow = wrapper.find('.overflow-x-auto')
-    expect(scrollRow.exists()).toBe(true)
-    expect(scrollRow.text()).toContain('アーカイブ')
-    expect(scrollRow.text()).toContain('削除')
-    expect(scrollRow.text()).toContain('既読')
-    expect(scrollRow.text()).toContain('未読')
-  })
-
-  test('閉じるボタンを押すと clear が emit される', async () => {
+  test('閉じるボタンで clear イベントが発行される', async () => {
     const wrapper = mountBar()
     const closeBtn = wrapper.findAll('button').find((b) => b.text() === '✕')
     await closeBtn?.trigger('click')
-    expect(wrapper.emitted('clear')).toBeTruthy()
+    expect(wrapper.emitted('clear')).toHaveLength(1)
   })
 
-  describe('プログレスバー', () => {
-    test('処理中でないときオーバーレイが表示されない', () => {
+  describe('アクションボタン', () => {
+    test('アーカイブを押すと enqueue が呼ばれ選択解除される', async () => {
       const wrapper = mountBar()
-      expect(wrapper.find('.bg-forest-50\\/90').exists()).toBe(false)
+      const archiveBtn = wrapper.findAll('button').find((b) => b.text() === 'アーカイブ')
+      await archiveBtn?.trigger('click')
+      expect(mockEnqueue).toHaveBeenCalledWith(expect.objectContaining({
+        action: 'archive',
+        threadIds: ['t1', 't2'],
+        originPath: '/inbox',
+      }))
+      expect(wrapper.emitted('clear')).toHaveLength(1)
     })
 
-    test('isProcessing=true のときオーバーレイが表示される', async () => {
-      mockIsProcessing.value = true
-      mockProgress.value = { processed: 10, total: 40 }
+    test('既読を押すと enqueue が markRead で呼ばれる', async () => {
       const wrapper = mountBar()
-      await wrapper.vm.$nextTick()
-      expect(wrapper.find('.bg-forest-50\\/90').exists()).toBe(true)
-      expect(wrapper.text()).toContain('10/40件処理中')
+      const btn = wrapper.findAll('button').find((b) => b.text() === '既読')
+      await btn?.trigger('click')
+      expect(mockEnqueue).toHaveBeenCalledWith(expect.objectContaining({ action: 'markRead' }))
     })
 
-    test('progressPct に応じたバーの幅が設定される', async () => {
-      mockIsProcessing.value = true
-      mockProgress.value = { processed: 20, total: 40 }
+    test('未読を押すと enqueue が markUnread で呼ばれる', async () => {
       const wrapper = mountBar()
-      await wrapper.vm.$nextTick()
-      const bar = wrapper.find('.bg-forest-600')
-      expect(bar.attributes('style')).toContain('width: 50%')
+      const btn = wrapper.findAll('button').find((b) => b.text() === '未読')
+      await btn?.trigger('click')
+      expect(mockEnqueue).toHaveBeenCalledWith(expect.objectContaining({ action: 'markUnread' }))
     })
 
-    test('etaMs が設定されているとき残り時間が表示される（秒）', async () => {
-      mockIsProcessing.value = true
-      mockProgress.value = { processed: 5, total: 20 }
-      mockEtaMs.value = 15000
+    test('label にアクション名と件数が含まれる', async () => {
       const wrapper = mountBar()
-      await wrapper.vm.$nextTick()
-      expect(wrapper.text()).toContain('残り約15秒')
-    })
-
-    test('etaMs が60秒以上のとき分表示になる', async () => {
-      mockIsProcessing.value = true
-      mockProgress.value = { processed: 5, total: 20 }
-      mockEtaMs.value = 90000
-      const wrapper = mountBar()
-      await wrapper.vm.$nextTick()
-      expect(wrapper.text()).toContain('残り約2分')
-    })
-
-    test('etaMs が null のとき残り時間は表示されない', async () => {
-      mockIsProcessing.value = true
-      mockProgress.value = { processed: 5, total: 20 }
-      mockEtaMs.value = null
-      const wrapper = mountBar()
-      await wrapper.vm.$nextTick()
-      expect(wrapper.text()).not.toContain('残り約')
+      const archiveBtn = wrapper.findAll('button').find((b) => b.text() === 'アーカイブ')
+      await archiveBtn?.trigger('click')
+      const call = mockEnqueue.mock.calls[0][0]
+      expect(call.label).toContain('アーカイブ')
+      expect(call.label).toContain('2')
     })
   })
 
@@ -146,19 +113,24 @@ describe('BulkActionBar', () => {
       expect(wrapper.text()).toContain('キャンセル')
     })
 
-    test('キャンセルを押すとダイアログが閉じて execute は呼ばれない', async () => {
+    test('キャンセルを押すとダイアログが閉じて enqueue は呼ばれない', async () => {
       const wrapper = mountBar()
       await wrapper.findAll('button').find((b) => b.text() === '削除')?.trigger('click')
       await wrapper.findAll('button').find((b) => b.text() === 'キャンセル')?.trigger('click')
       expect(wrapper.find('.bg-black\\/40').exists()).toBe(false)
-      expect(mockExecute).not.toHaveBeenCalled()
+      expect(mockEnqueue).not.toHaveBeenCalled()
     })
 
-    test('削除するを押すと execute が trash で呼ばれる', async () => {
+    test('削除するを押すと enqueue が trash で呼ばれ選択解除される', async () => {
       const wrapper = mountBar()
       await wrapper.findAll('button').find((b) => b.text() === '削除')?.trigger('click')
       await wrapper.findAll('button').find((b) => b.text() === '削除する')?.trigger('click')
-      expect(mockExecute).toHaveBeenCalledWith(['t1', 't2'], 'trash', undefined)
+      expect(mockEnqueue).toHaveBeenCalledWith(expect.objectContaining({
+        action: 'trash',
+        threadIds: ['t1', 't2'],
+        originPath: '/inbox',
+      }))
+      expect(wrapper.emitted('clear')).toHaveLength(1)
     })
 
     test('確認ダイアログに選択件数が表示される', async () => {

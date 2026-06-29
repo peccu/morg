@@ -1,35 +1,37 @@
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue'
+import { ref } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { useBulkAction } from '@/composables/useBulkAction'
+import { useRoute } from 'vue-router'
+import { useTaskQueueStore } from '@/stores/taskQueue'
 import type { BatchAction } from '@morg/shared'
 import type { LabelItem } from '@/composables/useLabels'
 
 const props = defineProps<{ selectedIds: string[]; labels: LabelItem[] }>()
-const emit = defineEmits<{ clear: []; 'update:isProcessing': [boolean] }>()
+const emit = defineEmits<{ clear: [] }>()
 
-const { execute, isProcessing, progress, etaMs } = useBulkAction()
+const taskQueue = useTaskQueueStore()
+const route = useRoute()
 const { t } = useI18n()
 
-const progressPct = computed(() =>
-  progress.value.total > 0
-    ? Math.round((progress.value.processed / progress.value.total) * 100)
-    : 0,
-)
-
-const etaText = computed(() => {
-  if (etaMs.value === null) return null
-  const secs = Math.ceil(etaMs.value / 1000)
-  if (secs < 60) return t('time.sec', { n: secs })
-  return t('time.min', { n: Math.ceil(secs / 60) })
-})
 const showLabelMenu = ref(false)
 const showDeleteConfirm = ref(false)
 
-watch(isProcessing, (val) => emit('update:isProcessing', val))
-
-async function run(action: BatchAction, labelId?: string) {
-  await execute(props.selectedIds, action, labelId)
+function run(action: BatchAction, labelId?: string) {
+  const actionNames: Record<string, string> = {
+    archive: t('actions.archive'),
+    trash: t('actions.delete'),
+    markRead: t('actions.markRead'),
+    markUnread: t('actions.markUnread'),
+    addLabel: props.labels.find(l => l.id === labelId)?.name ?? t('bulk.label'),
+  }
+  const label = `${actionNames[action] ?? action} (${props.selectedIds.length})`
+  taskQueue.enqueue({
+    action,
+    threadIds: [...props.selectedIds],
+    labelId,
+    label,
+    originPath: route.fullPath,
+  })
   showLabelMenu.value = false
   emit('clear')
 }
@@ -38,9 +40,9 @@ function requestDelete() {
   showDeleteConfirm.value = true
 }
 
-async function confirmDelete() {
+function confirmDelete() {
   showDeleteConfirm.value = false
-  await run('trash')
+  run('trash')
 }
 
 const userLabels = () => props.labels.filter((l) => l.type === 'user')
@@ -51,27 +53,6 @@ const userLabels = () => props.labels.filter((l) => l.type === 'user')
     v-if="selectedIds.length > 0"
     class="flex flex-col bg-forest-50 border-b text-sm flex-shrink-0 relative"
   >
-    <!-- 処理中オーバーレイ（プログレスバー） -->
-    <div
-      v-if="isProcessing"
-      class="absolute inset-0 bg-forest-50/90 flex flex-col items-center justify-center gap-2 z-10 px-4"
-    >
-      <div class="w-full flex items-center gap-2 text-xs text-forest-700">
-        <svg class="w-3.5 h-3.5 animate-spin flex-shrink-0 text-forest-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
-          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
-        </svg>
-        <span class="font-medium">{{ t('bulk.processing', { processed: progress.processed, total: progress.total }) }}</span>
-        <span v-if="etaText" class="ml-auto text-gray-500">{{ t('bulk.etaLeft', { eta: etaText }) }}</span>
-      </div>
-      <div class="w-full bg-gray-200 rounded-full h-1.5">
-        <div
-          class="bg-forest-600 h-1.5 rounded-full transition-[width] duration-300"
-          :style="{ width: progressPct + '%' }"
-        />
-      </div>
-    </div>
-
     <!-- 1行目: 件数 + ラベル + 閉じるボタン -->
     <div class="flex items-center px-2 pt-1 pb-0.5 relative">
       <span class="text-forest-700 font-medium text-xs">{{ t('bulk.selectedCount', { n: selectedIds.length }) }}</span>
@@ -79,7 +60,7 @@ const userLabels = () => props.labels.filter((l) => l.type === 'user')
       <!-- ラベル追加ドロップダウン（overflow-x-autoの外に置くためrow1に配置） -->
       <div class="relative ml-auto mr-1">
         <button
-          :disabled="isProcessing || userLabels().length === 0"
+          :disabled="userLabels().length === 0"
           class="px-2 h-8 flex items-center rounded bg-white border hover:bg-gray-50 disabled:opacity-50 cursor-pointer text-xs"
           @click="showLabelMenu = !showLabelMenu"
         >{{ t('bulk.label') }}</button>
@@ -97,8 +78,7 @@ const userLabels = () => props.labels.filter((l) => l.type === 'user')
       </div>
 
       <button
-        :disabled="isProcessing"
-        class="w-9 h-9 flex items-center justify-center text-gray-400 hover:text-gray-600 cursor-pointer text-base disabled:opacity-30"
+        class="w-9 h-9 flex items-center justify-center text-gray-400 hover:text-gray-600 cursor-pointer text-base"
         @click="showLabelMenu = false; emit('clear')"
       >✕</button>
     </div>
@@ -106,26 +86,22 @@ const userLabels = () => props.labels.filter((l) => l.type === 'user')
     <!-- 2行目: アクションボタン（横スクロール） -->
     <div class="flex items-center gap-1.5 px-2 pb-2 overflow-x-auto">
       <button
-        :disabled="isProcessing"
-        class="px-3 h-9 flex items-center rounded bg-white border hover:bg-gray-50 disabled:opacity-50 cursor-pointer text-sm flex-shrink-0"
+        class="px-3 h-9 flex items-center rounded bg-white border hover:bg-gray-50 cursor-pointer text-sm flex-shrink-0"
         @click="run('archive')"
       >{{ t('actions.archive') }}</button>
 
       <button
-        :disabled="isProcessing"
-        class="px-3 h-9 flex items-center rounded bg-white border border-red-200 text-red-600 hover:bg-red-50 disabled:opacity-50 cursor-pointer text-sm flex-shrink-0"
+        class="px-3 h-9 flex items-center rounded bg-white border border-red-200 text-red-600 hover:bg-red-50 cursor-pointer text-sm flex-shrink-0"
         @click="requestDelete"
       >{{ t('actions.delete') }}</button>
 
       <button
-        :disabled="isProcessing"
-        class="px-3 h-9 flex items-center rounded bg-white border hover:bg-gray-50 disabled:opacity-50 cursor-pointer text-sm flex-shrink-0"
+        class="px-3 h-9 flex items-center rounded bg-white border hover:bg-gray-50 cursor-pointer text-sm flex-shrink-0"
         @click="run('markRead')"
       >{{ t('actions.markRead') }}</button>
 
       <button
-        :disabled="isProcessing"
-        class="px-3 h-9 flex items-center rounded bg-white border hover:bg-gray-50 disabled:opacity-50 cursor-pointer text-sm flex-shrink-0"
+        class="px-3 h-9 flex items-center rounded bg-white border hover:bg-gray-50 cursor-pointer text-sm flex-shrink-0"
         @click="run('markUnread')"
       >{{ t('actions.markUnread') }}</button>
     </div>
