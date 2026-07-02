@@ -92,6 +92,26 @@ function toggleScrollMode(msgId: string) {
   scrollMsgIds.value = next
 }
 
+// メール本文を Blob URL で新規タブに流し込む
+function openInNewTab(msgId: string) {
+  const body = msgBodies.value.get(msgId)
+  if (!body?.html) return
+  // スコープ済みの html を .mail-body div で包んでスタイルが効くようにする
+  const fullHtml = `<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<style>body{margin:0;padding:16px;} .mail-body{max-width:100%;}</style>
+</head>
+<body><div class="mail-body">${body.html}</div></body>
+</html>`
+  const blob = new Blob([fullHtml], { type: 'text/html' })
+  const url = URL.createObjectURL(blob)
+  window.open(url, '_blank', 'noopener,noreferrer')
+  setTimeout(() => URL.revokeObjectURL(url), 30000)
+}
+
 // HTMLメール内リンクを新しいタブで開く
 function onMailClick(e: MouseEvent) {
   const a = (e.target as HTMLElement).closest('a')
@@ -311,9 +331,22 @@ function copyText(text: string) {
 
             <!-- メッセージ本文 -->
             <div>
-              <!-- 横幅モード切替（HTMLメールのみ） -->
-              <div v-if="msgBodies.get(msg.id)?.isHtml" class="flex justify-end px-3 pt-2">
+              <!-- 本文ツールバー（本文あるメッセージのみ） -->
+              <div v-if="msgBodies.has(msg.id)" class="flex justify-end items-center gap-1 px-3 pt-2">
+                <!-- 新規タブで開く -->
                 <button
+                  class="text-xs border rounded px-2 py-0.5 cursor-pointer flex-shrink-0 text-gray-400 border-gray-300 hover:text-gray-600 flex items-center gap-1"
+                  :title="t('thread.openInTab')"
+                  @click.stop="openInNewTab(msg.id)"
+                >
+                  <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                  </svg>
+                  {{ t('thread.openInTab') }}
+                </button>
+                <!-- 横スクロール/縮小（HTMLメールのみ） -->
+                <button
+                  v-if="msgBodies.get(msg.id)?.isHtml"
                   class="text-xs border rounded px-2 py-0.5 cursor-pointer flex-shrink-0"
                   :class="scrollMsgIds.has(msg.id) ? 'text-forest-700 border-forest-400 bg-forest-50' : 'text-gray-400 border-gray-300 hover:text-gray-600'"
                   @click.stop="toggleScrollMode(msg.id)"

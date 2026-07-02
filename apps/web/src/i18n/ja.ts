@@ -74,6 +74,7 @@ export default {
     select: '選択',
     deselect: '選択解除',
     selectAll: '全て選択',
+    openInTab: '別タブ',
   },
   sender: {
     title: '送信者',

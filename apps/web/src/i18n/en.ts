@@ -74,6 +74,7 @@ export default {
     select: 'Select',
     deselect: 'Deselect',
     selectAll: 'Select All',
+    openInTab: 'New tab',
   },
   sender: {
     title: 'Senders',
