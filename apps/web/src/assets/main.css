@@ -78,10 +78,15 @@
   }
 
   /* HTMLメール内の要素がはみ出ないよう制限（縮小モード）
-     !important でメール内 inline style (max-width:600px 等) を上書きして画面幅に収める */
-  .mail-body img,
+     max-width: 100% !important でメール内 inline style を上書き。
+     table は HTML width 属性が "最小希望幅" として機能するため width: 100% !important も必要。 */
+  .mail-body img {
+    max-width: 100% !important;
+    height: auto;
+  }
   .mail-body table {
     max-width: 100% !important;
+    width: 100% !important;
     height: auto;
   }
   .mail-body td,
@@ -126,9 +131,13 @@
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
   }
-  .mail-body.mail-scroll img,
+  .mail-body.mail-scroll img {
+    max-width: none !important;
+    height: auto;
+  }
   .mail-body.mail-scroll table {
     max-width: none !important;
+    width: auto !important;
     height: auto;
   }
   .mail-body.mail-scroll * {

@@ -69,10 +69,11 @@ function scopeSelectors(selectorText: string, scope: string): string {
       // body / html / :root → スコープ要素そのもの
       if (s === 'html' || s === 'body' || s === ':root') return scope
       if (s === '*') return `${scope} *`
-      // "body .foo" → scope + " .foo"
-      s = s.replace(/^(html|body)\s+/, `${scope} `)
-      if (!s.startsWith(scope)) s = `${scope} ${s}`
-      return s
+      // "body .foo" / "html .foo" → scope + " .foo"
+      const replaced = s.replace(/^(html|body)\s+/, `${scope} `)
+      if (replaced !== s) return replaced
+      // その他は全て scope を前置する（メール独自の .mail-body クラスも含む）
+      return `${scope} ${s}`
     })
     .filter(Boolean)
     .join(', ')
