@@ -45,10 +45,90 @@ function extractPart(part: GmailMessagePart, mimeType: string): string | null {
   return null
 }
 
+// ── メールの <style> スコープ化 ──────────────────────────────────────
+// メール内 <style> のセレクタ全てに scopeClass を付与して
+// アプリ UI への CSS 汚染（白文字等）を防ぐ。
+// またメール CSS の !important を除去することで、
+// こちらの max-width / min-width !important が確実に勝てるようにする。
+
+function findMatchingBrace(css: string, start: number): number {
+  let depth = 0
+  for (let i = start; i < css.length; i++) {
+    if (css[i] === '{') depth++
+    else if (css[i] === '}' && --depth === 0) return i
+  }
+  return -1
+}
+
+function scopeSelectors(selectorText: string, scope: string): string {
+  return selectorText
+    .split(',')
+    .map(s => {
+      s = s.trim()
+      if (!s) return ''
+      // body / html / :root → スコープ要素そのもの
+      if (s === 'html' || s === 'body' || s === ':root') return scope
+      if (s === '*') return `${scope} *`
+      // "body .foo" → scope + " .foo"
+      s = s.replace(/^(html|body)\s+/, `${scope} `)
+      if (!s.startsWith(scope)) s = `${scope} ${s}`
+      return s
+    })
+    .filter(Boolean)
+    .join(', ')
+}
+
+function scopeEmailCss(css: string, scope: string): string {
+  css = css
+    .replace(/\/\*[\s\S]*?\*\//g, '')   // コメント除去
+    .replace(/@import[^;]*;/gi, '')     // @import 除去
+    .replace(/!important/gi, '')        // メールの !important を除去（自アプリの !important を優先させるため）
+
+  let result = ''
+  let i = 0
+
+  while (i < css.length) {
+    const openIdx = css.indexOf('{', i)
+    if (openIdx === -1) break
+
+    const selectorPart = css.slice(i, openIdx).trim()
+    if (!selectorPart) { i = openIdx + 1; continue }
+
+    const closeIdx = findMatchingBrace(css, openIdx)
+    if (closeIdx === -1) break
+
+    const blockContent = css.slice(openIdx + 1, closeIdx)
+
+    if (selectorPart.startsWith('@media') || selectorPart.startsWith('@supports')) {
+      // @media / @supports: 中身を再帰的にスコープ化
+      result += `${selectorPart}{${scopeEmailCss(blockContent, scope)}}`
+    } else if (selectorPart.startsWith('@')) {
+      // @keyframes / @font-face 等: そのまま通す
+      result += `${selectorPart}{${blockContent}}`
+    } else {
+      result += `${scopeSelectors(selectorPart, scope)}{${blockContent}}`
+    }
+
+    i = closeIdx + 1
+  }
+
+  return result
+}
+
+function scopeStyleTags(html: string, scope: string): string {
+  return html.replace(
+    /<style([^>]*)>([\s\S]*?)<\/style>/gi,
+    (_, attrs, css) => `<style${attrs}>${scopeEmailCss(css, scope)}</style>`,
+  )
+}
+
+// ─────────────────────────────────────────────────────────────────────
+
 export function extractBody(payload: GmailMessagePart): { html: string; isHtml: boolean } {
-  const html = extractPart(payload, 'text/html')
-  if (html) {
-    return { html: DOMPurify.sanitize(html), isHtml: true }
+  const rawHtml = extractPart(payload, 'text/html')
+  if (rawHtml) {
+    const sanitized = DOMPurify.sanitize(rawHtml)
+    return { html: scopeStyleTags(sanitized, '.mail-body'), isHtml: true }
   }
   const plain = extractPart(payload, 'text/plain')
   if (plain) {

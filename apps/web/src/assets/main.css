@@ -91,6 +91,7 @@
   }
   .mail-body * {
     max-width: 100% !important;
+    min-width: 0 !important;
     box-sizing: border-box;
   }
 
