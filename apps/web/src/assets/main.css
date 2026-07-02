@@ -121,11 +121,11 @@
   }
   .mail-body.mail-scroll img,
   .mail-body.mail-scroll table {
-    max-width: none;
+    max-width: none !important;
     height: auto;
   }
   .mail-body.mail-scroll * {
-    max-width: none;
+    max-width: none !important;
     word-break: normal;
     overflow-wrap: normal;
   }
