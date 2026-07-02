@@ -77,14 +77,20 @@
     padding-bottom: max(0.5rem, env(safe-area-inset-bottom));
   }
 
-  /* HTMLメール内の要素がはみ出ないよう制限（縮小モード） */
+  /* HTMLメール内の要素がはみ出ないよう制限（縮小モード）
+     !important でメール内 inline style (max-width:600px 等) を上書きして画面幅に収める */
   .mail-body img,
   .mail-body table {
-    max-width: 100%;
+    max-width: 100% !important;
     height: auto;
   }
+  .mail-body td,
+  .mail-body th {
+    word-break: break-word;
+    overflow-wrap: break-word;
+  }
   .mail-body * {
-    max-width: 100%;
+    max-width: 100% !important;
     box-sizing: border-box;
   }
 
