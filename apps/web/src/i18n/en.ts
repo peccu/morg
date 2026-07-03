@@ -30,6 +30,7 @@ export default {
     checkUpdate: 'Check for Updates',
     checking: 'Checking...',
     clear: 'Clear',
+    retry: 'Retry',
     loadMore: 'Load More',
     loadMoreSearch: 'Load More',
     operationFailed: 'Operation failed',

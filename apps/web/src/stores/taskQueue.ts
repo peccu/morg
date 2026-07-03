@@ -120,5 +120,20 @@ export const useTaskQueueStore = defineStore('taskQueue', () => {
     }
   }
 
-  return { tasks, hasActiveTasks, enqueue, dismiss }
+  function retry(id: string) {
+    const task = tasks.value.find(t => t.id === id)
+    if (!task || task.status !== 'error') return
+    const remaining = task.threadIds.slice(task.processed)
+    if (remaining.length === 0) return
+    dismiss(id)
+    enqueue({
+      action: task.action,
+      threadIds: remaining,
+      labelId: task.labelId,
+      label: task.label,
+      originPath: task.originPath,
+    })
+  }
+
+  return { tasks, hasActiveTasks, enqueue, dismiss, retry }
 })

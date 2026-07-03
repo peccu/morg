@@ -30,6 +30,7 @@ export default {
     checkUpdate: '更新を確認',
     checking: '確認中...',
     clear: 'クリア',
+    retry: 'リトライ',
     loadMore: 'もっと読む',
     loadMoreSearch: '続きを取得',
     operationFailed: '操作に失敗しました',

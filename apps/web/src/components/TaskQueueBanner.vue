@@ -74,6 +74,13 @@ function etaText(task: QueueTask) {
               @click="router.push(task.originPath)"
             >{{ t('actions.back') }}</button>
 
+            <!-- リトライボタン（error かつ未処理残りあり） -->
+            <button
+              v-if="task.status === 'error' && task.processed < task.total"
+              class="text-xs text-amber-300 hover:text-white px-2 h-8 rounded hover:bg-forest-700 cursor-pointer flex-shrink-0 transition-colors"
+              @click="store.retry(task.id)"
+            >{{ t('actions.retry') }}</button>
+
             <!-- 閉じるボタン（done/error） -->
             <button
               v-if="task.status === 'done' || task.status === 'error'"

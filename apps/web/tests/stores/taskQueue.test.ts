@@ -117,6 +117,38 @@ describe('useTaskQueueStore', () => {
     expect(store.tasks[1].status).toBe('pending')
   })
 
+  test('retry: エラータスクの未処理分だけ新タスクとして再エンキューされる', async () => {
+    let callCount = 0
+    vi.stubGlobal('fetch', vi.fn().mockImplementation(() => {
+      callCount++
+      // 1回目は成功、2回目はエラー
+      if (callCount === 1) {
+        return Promise.resolve({
+          status: 200,
+          json: () => Promise.resolve({ succeeded: 20, failed: 0 }),
+        })
+      }
+      return Promise.resolve({
+        status: 500,
+        json: () => Promise.resolve({ error: 'network error' }),
+      })
+    }))
+
+    const store = useTaskQueueStore()
+    // 21件 → chunk=20 で 2回リクエスト (1回目成功, 2回目失敗)
+    const ids = Array.from({ length: 21 }, (_, i) => `t${i}`)
+    store.enqueue({ action: 'trash', threadIds: ids, label: 'test', originPath: '/inbox' })
+
+    await vi.waitFor(() => expect(store.tasks[0].status).toBe('error'))
+    expect(store.tasks[0].processed).toBe(20)
+
+    // リトライ: 残り1件
+    store.retry(store.tasks[0].id)
+    expect(store.tasks).toHaveLength(1)
+    expect(store.tasks[0].total).toBe(1)
+    expect(store.tasks[0].threadIds).toEqual(['t20'])
+  })
+
   test('2つのタスクが逐次実行されて両方 done になる', async () => {
     const fetchMock = vi.fn().mockResolvedValue({
       status: 200,
