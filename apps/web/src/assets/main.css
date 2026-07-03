@@ -87,6 +87,8 @@
   .mail-body table {
     max-width: 100% !important;
     width: 100% !important;
+    /* table-layout: fixed でコンテンツのMCWによるテーブル幅の強制拡張を防ぐ */
+    table-layout: fixed !important;
     height: auto;
   }
   .mail-body td,
@@ -138,6 +140,7 @@
   .mail-body.mail-scroll table {
     max-width: none !important;
     width: auto !important;
+    table-layout: auto !important;
     height: auto;
   }
   .mail-body.mail-scroll * {
