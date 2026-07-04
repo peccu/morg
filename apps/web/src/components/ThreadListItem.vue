@@ -3,12 +3,15 @@ import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import type { ThreadListItem } from '@morg/shared'
 import { useLabels } from '@/composables/useLabels'
+import { useTaskQueueStore } from '@/stores/taskQueue'
 
 const props = defineProps<{ thread: ThreadListItem; selected: boolean; checked: boolean; selectionMode: boolean }>()
 defineEmits<{ click: []; check: [id: string] }>()
 
 const { data: labels } = useLabels()
 const { t, te, locale } = useI18n()
+const taskQueueStore = useTaskQueueStore()
+const isBeingProcessed = computed(() => taskQueueStore.processingThreadIds.has(props.thread.threadId))
 
 function formatDate(raw: string): string {
   if (!raw) return ''
@@ -91,11 +94,15 @@ const displayLabels = computed(() => {
       class="flex-1 min-w-0 py-1.5 pr-3 cursor-pointer"
       @click="selectionMode ? $emit('check', thread.threadId) : $emit('click')"
     >
-      <div class="flex items-baseline justify-between gap-2">
+      <div class="flex items-center justify-between gap-2">
         <span class="text-sm truncate" :class="thread.unread ? 'font-semibold text-gray-900' : 'text-gray-700'">
           {{ senderName(thread.from) || t('thread.noSender') }}
         </span>
-        <span class="text-xs text-gray-400 flex-shrink-0">{{ formatDate(thread.date) }}</span>
+        <svg v-if="isBeingProcessed" class="w-3.5 h-3.5 animate-spin text-forest-500 flex-shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
+          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
+        </svg>
+        <span v-else class="text-xs text-gray-400 flex-shrink-0">{{ formatDate(thread.date) }}</span>
       </div>
       <p class="text-sm truncate leading-tight" :class="thread.unread ? 'font-medium text-gray-900' : 'text-gray-600'">
         {{ thread.subject }}

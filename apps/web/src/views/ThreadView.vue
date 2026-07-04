@@ -12,6 +12,7 @@ import { extractBody } from '@/lib/mail-body'
 import type { BatchAction } from '@morg/shared'
 import type { GmailMessagePart, GmailMessageHeader } from '@morg/shared'
 import type { Plugin, ThreadAction } from '@/plugins/types'
+import { useTaskQueueStore } from '@/stores/taskQueue'
 
 const route  = useRoute()
 const router = useRouter()
@@ -49,7 +50,10 @@ function msgLabels(labelIds: string[]) {
     }))
 }
 
-const isProcessing = computed(() => threadProcessing.value || msgProcessing.value)
+const taskQueueStore = useTaskQueueStore()
+const isProcessing = computed(
+  () => threadProcessing.value || msgProcessing.value || taskQueueStore.processingThreadIds.has(id.value),
+)
 
 const pluginsStore = usePluginsStore()
 const appAPI = useAppAPI()

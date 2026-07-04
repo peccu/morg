@@ -31,6 +31,16 @@ export const useTaskQueueStore = defineStore('taskQueue', () => {
     tasks.value.some(t => t.status === 'pending' || t.status === 'running'),
   )
 
+  const processingThreadIds = computed<Set<string>>(() => {
+    const ids = new Set<string>()
+    for (const t of tasks.value) {
+      if (t.status === 'pending' || t.status === 'running') {
+        for (const id of t.threadIds) ids.add(id)
+      }
+    }
+    return ids
+  })
+
   function enqueue(opts: {
     action: BatchAction
     threadIds: string[]
@@ -135,5 +145,5 @@ export const useTaskQueueStore = defineStore('taskQueue', () => {
     })
   }
 
-  return { tasks, hasActiveTasks, enqueue, dismiss, retry }
+  return { tasks, hasActiveTasks, processingThreadIds, enqueue, dismiss, retry }
 })
