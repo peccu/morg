@@ -76,6 +76,7 @@ export default {
     deselect: '選択解除',
     selectAll: '全て選択',
     openInTab: '別タブ',
+    deleteMsgTitle: '{n}件のメッセージを削除',
   },
   sender: {
     title: '送信者',

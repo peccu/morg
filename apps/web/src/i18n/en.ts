@@ -76,6 +76,7 @@ export default {
     deselect: 'Deselect',
     selectAll: 'Select All',
     openInTab: 'New tab',
+    deleteMsgTitle: 'Delete {n} messages',
   },
   sender: {
     title: 'Senders',

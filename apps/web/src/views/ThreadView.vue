@@ -81,6 +81,10 @@ async function runPluginAction(plugin: Plugin, action: ThreadAction) {
   }
 }
 
+// 削除確認ダイアログ
+const showThreadDeleteConfirm = ref(false)
+const showMsgDeleteConfirm = ref(false)
+
 // メッセージ選択状態
 const checkedMsgIds = ref(new Set<string>())
 
@@ -259,7 +263,7 @@ function copyText(text: string) {
       <div class="flex items-center gap-1 px-2 overflow-x-auto flex-1 min-w-0">
         <span class="text-xs text-gray-400 flex-shrink-0">{{ t('thread.all') }}</span>
         <button :disabled="isProcessing" class="px-2.5 min-h-[44px] flex items-center text-sm rounded bg-white border hover:bg-gray-100 disabled:opacity-50 cursor-pointer flex-shrink-0" @click="runThreadAction('archive')">{{ t('actions.archive') }}</button>
-        <button :disabled="isProcessing" class="px-2.5 min-h-[44px] flex items-center text-sm rounded bg-white border hover:bg-gray-100 disabled:opacity-50 cursor-pointer flex-shrink-0" @click="runThreadAction('trash')">{{ t('actions.delete') }}</button>
+        <button :disabled="isProcessing" class="px-2.5 min-h-[44px] flex items-center text-sm rounded bg-white border hover:bg-gray-100 disabled:opacity-50 cursor-pointer flex-shrink-0" @click="showThreadDeleteConfirm = true">{{ t('actions.delete') }}</button>
         <button :disabled="isProcessing" class="px-2.5 min-h-[44px] flex items-center text-sm rounded bg-white border hover:bg-gray-100 disabled:opacity-50 cursor-pointer flex-shrink-0" @click="runThreadAction('markRead')">{{ t('actions.markRead') }}</button>
         <button :disabled="isProcessing" class="px-2.5 min-h-[44px] flex items-center text-sm rounded bg-white border hover:bg-gray-100 disabled:opacity-50 cursor-pointer flex-shrink-0" @click="runThreadAction('markUnread')">{{ t('actions.markUnread') }}</button>
 
@@ -301,7 +305,7 @@ function copyText(text: string) {
 
       <span class="text-xs text-forest-700 font-medium">{{ t('thread.msgSelected', { n: checkedMsgIds.size }) }}</span>
       <button :disabled="isProcessing" class="px-2.5 min-h-[44px] flex items-center text-sm rounded bg-white border hover:bg-gray-100 disabled:opacity-50 cursor-pointer" @click="runMsgAction('archive')">{{ t('actions.archive') }}</button>
-      <button :disabled="isProcessing" class="px-2.5 min-h-[44px] flex items-center text-sm rounded bg-white border hover:bg-gray-100 disabled:opacity-50 cursor-pointer" @click="runMsgAction('trash')">{{ t('actions.delete') }}</button>
+      <button :disabled="isProcessing" class="px-2.5 min-h-[44px] flex items-center text-sm rounded bg-white border hover:bg-gray-100 disabled:opacity-50 cursor-pointer" @click="showMsgDeleteConfirm = true">{{ t('actions.delete') }}</button>
       <button :disabled="isProcessing" class="px-2.5 min-h-[44px] flex items-center text-sm rounded bg-white border hover:bg-gray-100 disabled:opacity-50 cursor-pointer" @click="runMsgAction('markRead')">{{ t('actions.markRead') }}</button>
       <button :disabled="isProcessing" class="px-2.5 min-h-[44px] flex items-center text-sm rounded bg-white border hover:bg-gray-100 disabled:opacity-50 cursor-pointer" @click="runMsgAction('markUnread')">{{ t('actions.markUnread') }}</button>
       <button class="ml-auto w-11 h-11 flex items-center justify-center text-gray-400 hover:text-gray-600 cursor-pointer" @click="clearMsgs">✕</button>
@@ -407,5 +411,49 @@ function copyText(text: string) {
         </div>
       </div>
     </main>
+
+    <!-- スレッド削除確認ダイアログ -->
+    <div
+      v-if="showThreadDeleteConfirm"
+      class="fixed inset-0 z-50 flex items-center justify-center bg-black/40"
+      @click.self="showThreadDeleteConfirm = false"
+    >
+      <div class="bg-white rounded-xl shadow-2xl mx-6 p-6 max-w-xs w-full">
+        <h2 class="text-base font-semibold text-gray-900 mb-1">{{ t('bulk.deleteTitle', { n: 1 }) }}</h2>
+        <p class="text-sm text-gray-500 mb-5">{{ t('bulk.deleteConfirm') }}</p>
+        <div class="flex gap-2">
+          <button
+            class="flex-1 min-h-[44px] border rounded text-sm text-gray-600 hover:bg-gray-50 cursor-pointer"
+            @click="showThreadDeleteConfirm = false"
+          >{{ t('actions.cancel') }}</button>
+          <button
+            class="flex-1 min-h-[44px] bg-red-600 hover:bg-red-500 text-white rounded text-sm font-medium cursor-pointer"
+            @click="showThreadDeleteConfirm = false; runThreadAction('trash')"
+          >{{ t('actions.doDelete') }}</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- メッセージ削除確認ダイアログ -->
+    <div
+      v-if="showMsgDeleteConfirm"
+      class="fixed inset-0 z-50 flex items-center justify-center bg-black/40"
+      @click.self="showMsgDeleteConfirm = false"
+    >
+      <div class="bg-white rounded-xl shadow-2xl mx-6 p-6 max-w-xs w-full">
+        <h2 class="text-base font-semibold text-gray-900 mb-1">{{ t('thread.deleteMsgTitle', { n: checkedMsgIds.size }) }}</h2>
+        <p class="text-sm text-gray-500 mb-5">{{ t('bulk.deleteConfirm') }}</p>
+        <div class="flex gap-2">
+          <button
+            class="flex-1 min-h-[44px] border rounded text-sm text-gray-600 hover:bg-gray-50 cursor-pointer"
+            @click="showMsgDeleteConfirm = false"
+          >{{ t('actions.cancel') }}</button>
+          <button
+            class="flex-1 min-h-[44px] bg-red-600 hover:bg-red-500 text-white rounded text-sm font-medium cursor-pointer"
+            @click="showMsgDeleteConfirm = false; runMsgAction('trash')"
+          >{{ t('actions.doDelete') }}</button>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
