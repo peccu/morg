@@ -336,7 +336,7 @@ async function onLogout() {
           >✕</button>
         </div>
 
-        <template v-if="spTab === 'list' || activeSender">
+        <template v-if="spTab === 'list'">
           <BulkActionBar :selected-ids="[...checkedIds]" :labels="labels ?? []" @clear="clearChecked" />
           <ThreadList
             class="flex-1 min-h-0"
