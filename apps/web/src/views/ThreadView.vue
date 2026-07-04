@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, ref, nextTick, onMounted, onUnmounted, type ComponentPublicInstance } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { useThread } from '@/composables/useThread'
@@ -90,7 +90,49 @@ function toggleScrollMode(msgId: string) {
   const next = new Set(scrollMsgIds.value)
   next.has(msgId) ? next.delete(msgId) : next.add(msgId)
   scrollMsgIds.value = next
+  nextTick(() => applyMailZoom(msgId))
 }
+
+// CSS zoom によるスケール縮小（per-message）
+// 自然幅のまま描画したメールを、コンテナ幅に合わせて zoom でスケールダウンする。
+// zoom はレイアウトサイズも変えるため overflow や高さ補正が不要。
+const mailBodyRefs = new Map<string, HTMLElement>()
+
+function setMailBodyRef(msgId: string, el: Element | ComponentPublicInstance | null) {
+  if (el instanceof HTMLElement) {
+    mailBodyRefs.set(msgId, el)
+    nextTick(() => applyMailZoom(msgId))
+  } else {
+    mailBodyRefs.delete(msgId)
+  }
+}
+
+function applyMailZoom(msgId: string) {
+  const el = mailBodyRefs.get(msgId)
+  if (!el) return
+
+  if (scrollMsgIds.value.has(msgId)) {
+    el.style.zoom = ''
+    return
+  }
+
+  // zoom を 1 にリセットして自然幅を計測し、zoom を算出して適用する。
+  // nextTick 内で実行されるため、ブラウザの paint より前に完了し視覚的なチラつきは発生しない。
+  el.style.zoom = '1'
+  const naturalWidth = el.scrollWidth
+  const containerWidth = el.parentElement?.offsetWidth ?? naturalWidth
+
+  el.style.zoom = naturalWidth > containerWidth
+    ? String(containerWidth / naturalWidth)
+    : ''
+}
+
+function reapplyAllZooms() {
+  for (const msgId of mailBodyRefs.keys()) applyMailZoom(msgId)
+}
+
+onMounted(() => window.addEventListener('resize', reapplyAllZooms))
+onUnmounted(() => window.removeEventListener('resize', reapplyAllZooms))
 
 // メール本文を Blob URL で新規タブに流し込む
 function openInNewTab(msgId: string) {
@@ -352,12 +394,11 @@ function copyText(text: string) {
                   @click.stop="toggleScrollMode(msg.id)"
                 >{{ scrollMsgIds.has(msg.id) ? t('thread.shrink') : t('thread.scrollHorizontal') }}</button>
               </div>
-              <!-- mail-body.mail-scroll が自身 overflow-x:auto になるため外側ラッパー不要 -->
               <div
                 v-if="msg.payload"
                 class="mail-body text-sm text-gray-800 px-3 py-3"
-                :class="scrollMsgIds.has(msg.id) ? 'mail-scroll' : 'min-w-0 max-w-full'"
-                :style="scrollMsgIds.has(msg.id) ? undefined : 'word-break:break-word;overflow-wrap:break-word'"
+                :class="scrollMsgIds.has(msg.id) ? 'mail-scroll' : ''"
+                :ref="(el) => setMailBodyRef(msg.id, el)"
                 v-html="msgBodies.get(msg.id)?.html || msg.snippet"
                 @click="onMailClick"
               />

@@ -30,8 +30,24 @@ async function checkUpdate() {
     const reg = await navigator.serviceWorker.getRegistration()
     if (reg) {
       await reg.update()
-      // SW が waiting 状態に入り needRefresh へ伝播するまで待つ
-      await new Promise<void>(resolve => setTimeout(resolve, 1000))
+      // installing 中のSWがあれば installed 状態になるまで待つ（最大5秒）
+      // 固定 1秒ではインストール完了前に判定してしまい needRefresh が false のまま誤表示される
+      if (reg.installing) {
+        await new Promise<void>(resolve => {
+          const sw = reg.installing!
+          const done = () => {
+            sw.removeEventListener('statechange', onStateChange)
+            resolve()
+          }
+          const onStateChange = () => {
+            if (sw.state === 'installed' || sw.state === 'activating' || sw.state === 'activated') done()
+          }
+          sw.addEventListener('statechange', onStateChange)
+          setTimeout(done, 5000)
+        })
+      }
+      // needRefresh への伝播を待つ短い余裕
+      await new Promise<void>(resolve => setTimeout(resolve, 100))
     }
   } catch {
     // ServiceWorker 未対応環境では無視
