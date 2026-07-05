@@ -95,7 +95,7 @@ function onStopFetch() {
 }
 function onLoadMore() {
   autoFetchStopped.value = false
-  // autoFetchActive は watch が fetchNextPage() を呼んだ時に true になる
+  fetchNextPage()
 }
 
 const threads = computed<ThreadListItem[]>(() =>
