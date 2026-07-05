@@ -110,6 +110,31 @@ export default {
     hint: '有効にしたプラグインのボタンがスレッド詳細のアクションバーに表示されます。',
     empty: '登録されているプラグインはありません',
     required: '必須',
+    webhook: {
+      name: 'Webhook 送信',
+      description: 'スレッド情報をエンドポイントに JSON で POST します（ingest・タグ付け・ベクトル化などに）',
+      endpointLabel: '送信先 URL',
+      apiKeyLabel: 'API キー（任意）',
+      apiKeyPlaceholder: 'Bearer トークンとして Authorization ヘッダーに付与',
+      actionLabel: '→ 送信',
+      sentNotify: '送信しました',
+    },
+    openInGmail: {
+      name: 'Gmail で開く',
+      description: 'スレッドを Gmail Web UI で直接開きます',
+    },
+    copySubject: {
+      name: '件名をコピー',
+      description: 'スレッドの件名をクリップボードにコピーします',
+      actionLabel: '件名コピー',
+      copiedNotify: '件名をコピーしました',
+    },
+    copyHtml: {
+      name: 'HTML コピー (debug)',
+      description: 'メール本文の生HTMLをクリップボードにコピーします（デバッグ用）',
+      actionLabel: 'HTML コピー',
+      copiedNotify: 'HTMLをコピーしました',
+    },
   },
   search: {
     placeholder: '検索...',

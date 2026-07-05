@@ -110,6 +110,31 @@ export default {
     hint: 'Enabled plugins appear as buttons in the thread detail action bar.',
     empty: 'No plugins registered',
     required: 'required',
+    webhook: {
+      name: 'Webhook',
+      description: 'POST thread info as JSON to an endpoint (for ingestion, tagging, vectorization, etc.)',
+      endpointLabel: 'Endpoint URL',
+      apiKeyLabel: 'API Key (optional)',
+      apiKeyPlaceholder: 'Sent as Bearer token in Authorization header',
+      actionLabel: '→ Send',
+      sentNotify: 'Sent',
+    },
+    openInGmail: {
+      name: 'Open in Gmail',
+      description: 'Open the thread directly in Gmail Web UI',
+    },
+    copySubject: {
+      name: 'Copy Subject',
+      description: 'Copy the thread subject to clipboard',
+      actionLabel: 'Copy Subject',
+      copiedNotify: 'Subject copied',
+    },
+    copyHtml: {
+      name: 'Copy HTML (debug)',
+      description: 'Copy the raw HTML of the email body to clipboard (for debugging)',
+      actionLabel: 'Copy HTML',
+      copiedNotify: 'HTML copied',
+    },
   },
   search: {
     placeholder: 'Search...',

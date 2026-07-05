@@ -1,5 +1,8 @@
 import type { Plugin } from '../types'
 import type { GmailMessagePart } from '@morg/shared'
+import { i18n } from '@/i18n'
+
+const t = i18n.global.t
 
 function decodeBase64Url(data: string): string {
   const base64 = data.replace(/-/g, '+').replace(/_/g, '/')
@@ -28,26 +31,26 @@ function hdr(headers: { name: string; value: string }[], name: string): string {
 
 export const webhookPlugin: Plugin = {
   id: 'webhook',
-  name: 'Webhook 送信',
-  description: 'スレッド情報をエンドポイントに JSON で POST します（ingest・タグ付け・ベクトル化などに）',
+  get name() { return t('plugins.webhook.name') },
+  get description() { return t('plugins.webhook.description') },
   defaultEnabled: false,
   configSchema: {
     endpoint: {
-      label: '送信先 URL',
+      get label() { return t('plugins.webhook.endpointLabel') },
       type: 'url',
       required: true,
       placeholder: 'https://your-service/ingest',
     },
     apiKey: {
-      label: 'API キー（任意）',
+      get label() { return t('plugins.webhook.apiKeyLabel') },
       type: 'password',
-      placeholder: 'Bearer トークンとして Authorization ヘッダーに付与',
+      get placeholder() { return t('plugins.webhook.apiKeyPlaceholder') },
     },
   },
   threadActions: [
     {
       id: 'send',
-      label: '→ 送信',
+      get label() { return t('plugins.webhook.actionLabel') },
       visible: ({ config }) => !!config.endpoint,
       async run({ threadId, thread, config, app }) {
         const first = thread.messages[0]
@@ -88,7 +91,7 @@ export const webhookPlugin: Plugin = {
         })
 
         if (!res.ok) throw new Error(`HTTP ${res.status}`)
-        app.notify('送信しました', 'success')
+        app.notify(t('plugins.webhook.sentNotify'), 'success')
       },
     },
   ],

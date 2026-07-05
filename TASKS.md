@@ -274,6 +274,30 @@
 
 ---
 
+### T012 · iPad PWA でウィンドウコントロールボタンがヘッダーと重畳する
+
+| 項目 | 内容 |
+|------|------|
+| **ステータス** | 📋 対応予定 |
+| **優先度** | 中 |
+| **概要** | iPad の PWA スタンドアロンモードでウィンドウを画面最上部に移動すると、macOS のトラフィックライトボタン（赤黄緑）がアプリヘッダーの左上コンテンツに重なる |
+
+**調査内容**
+- ウィンドウが画面上部に密着するとステータスバーと干渉し、OS がボタンをアプリ描画領域内に降ろしてくる
+- `env(safe-area-inset-top)` は iOS のノッチ・ステータスバー用で既に対応済み
+- macOS/iPadOS PWA のウィンドウコントロール領域は `env(titlebar-area-x)` / `env(titlebar-area-width)` / `env(titlebar-area-height)` で取得可能（Window Controls Overlay API）
+- ただし WCO は `display_override: window-controls-overlay` をマニフェストに追加する必要あり
+
+**対応方針案**
+- **案A（シンプル）**: ヘッダーの左端に `padding-left: max(env(titlebar-area-x, 0px) + env(titlebar-area-width, 0px), <既存値>)` を追加し、ボタン占有幅分だけコンテンツを右にずらす
+- **案B（WCO利用）**: マニフェストに `display_override: window-controls-overlay` を追加、CSS で `app-region: drag` を設定してヘッダーをドラッグハンドルに、コンテンツエリアを `titlebar-area-*` で制御する
+- まずは案A（マニフェスト変更なし）で試し、不十分なら案B を検討
+
+**確認方法**
+- iPad PWA をホーム画面から起動 → ウィンドウを画面最上部に移動 → ヘッダー左上コンテンツとトラフィックライトが重ならないこと
+
+---
+
 ### T003 · invalid_grant 時の再ログイン誘導
 
 | 項目 | 内容 |

@@ -1,9 +1,12 @@
 import type { Plugin } from '../types'
+import { i18n } from '@/i18n'
+
+const t = i18n.global.t
 
 export const openInGmailPlugin: Plugin = {
   id: 'open-in-gmail',
-  name: 'Gmail で開く',
-  description: 'スレッドを Gmail Web UI で直接開きます',
+  get name() { return t('plugins.openInGmail.name') },
+  get description() { return t('plugins.openInGmail.description') },
   defaultEnabled: true,
   threadActions: [
     {
