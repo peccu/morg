@@ -80,6 +80,12 @@ function toggleLocale() {
             {{ t('login.withGoogle') }}
           </button>
 
+          <!-- デモボタン -->
+          <button
+            class="w-full min-h-[44px] flex items-center justify-center gap-2 px-4 border border-forest-400 text-forest-700 rounded-lg text-sm hover:bg-forest-100 cursor-pointer transition-colors"
+            @click="router.push({ name: 'demo' })"
+          >{{ t('demo.tryDemo') }}</button>
+
           <!-- エラーメッセージ -->
           <div v-if="auth.loginError" class="rounded-lg bg-red-50 border border-red-200 px-4 py-3">
             <p class="text-sm text-red-700 font-medium">{{ t('login.failed') }}</p>

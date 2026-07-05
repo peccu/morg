@@ -143,6 +143,11 @@ export default {
     waiting: 'queued',
     done: 'done',
   },
+  demo: {
+    banner: 'Demo mode — not connected to real email',
+    exit: 'Exit Demo',
+    tryDemo: 'Try Demo',
+  },
   landing: {
     tagline: 'Organize Gmail from any device',
     desc: 'A browser-based PWA for Gmail. Bulk actions, sender filters, and plugin extensions — on PC, tablet, or phone.',

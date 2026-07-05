@@ -1,5 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
+import { useDemoStore } from '@/stores/demo'
 
 const router = createRouter({
   history: createWebHistory(),
@@ -42,10 +43,20 @@ const router = createRouter({
       component: () => import('@/views/PluginsView.vue'),
       meta: { requiresAuth: true },
     },
+    {
+      path: '/demo',
+      name: 'demo',
+      redirect: () => {
+        useDemoStore().enter()
+        return { name: 'inbox' }
+      },
+    },
   ],
 })
 
 router.beforeEach(async (to) => {
+  const demo = useDemoStore()
+  if (demo.isDemo) return
   const auth = useAuthStore()
   if (to.meta.requiresAuth) {
     if (!auth.initialized) await auth.checkAuth()

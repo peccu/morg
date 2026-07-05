@@ -4,6 +4,7 @@ import { useAuthStore } from '@/stores/auth'
 import { useTaskQueueStore } from '@/stores/taskQueue'
 import { useToast } from '@/composables/useToast'
 import TaskQueueBanner from '@/components/TaskQueueBanner.vue'
+import DemoBanner from '@/components/DemoBanner.vue'
 
 const auth = useAuthStore()
 onMounted(() => auth.checkAuth())
@@ -17,6 +18,7 @@ const toastBottom = computed(() => taskQueue.tasks.length > 0 ? '56px' : '16px')
   <RouterView />
 
   <TaskQueueBanner />
+  <DemoBanner />
 
   <!-- グローバル Toast 通知 -->
   <Teleport to="body">

@@ -143,6 +143,11 @@ export default {
     waiting: '待機中',
     done: '完了',
   },
+  demo: {
+    banner: 'デモモード — 実際のメールには接続していません',
+    exit: 'デモ終了',
+    tryDemo: 'デモを試す',
+  },
   landing: {
     tagline: 'Gmail をどのデバイスでも快適に整理',
     desc: 'ブラウザで使える Gmail 整理PWAアプリ。PC・タブレット・スマートフォンのどこからでも一括操作やプラグイン拡張が使えます。',
