@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { useAppUpdate } from '@/composables/useAppUpdate'
@@ -22,6 +22,31 @@ const buildDate = computed(() => {
 
 const checking = ref(false)
 const checked = ref(false)
+
+// Window safe-area debug info (for diagnosing T012 on iPad)
+const dbgScreenY    = ref(0)
+const dbgScreenX    = ref(0)
+const dbgIsStandalone = ref(false)
+const dbgHasWco     = ref(false)
+const dbgWcoVisible = ref(false)
+const dbgWsaLeft    = ref('—')
+const dbgWsaTop     = ref('—')
+
+function refreshDbg() {
+  dbgScreenY.value    = window.screenY
+  dbgScreenX.value    = window.screenX
+  dbgIsStandalone.value = window.matchMedia('(display-mode: standalone)').matches
+  dbgHasWco.value     = 'windowControlsOverlay' in navigator
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  dbgWcoVisible.value = dbgHasWco.value && (navigator as any).windowControlsOverlay.visible
+  const cs = getComputedStyle(document.documentElement)
+  dbgWsaLeft.value = cs.getPropertyValue('--wsa-left').trim() || '0px'
+  dbgWsaTop.value  = cs.getPropertyValue('--wsa-top').trim() || '0px'
+}
+
+let dbgTimer: ReturnType<typeof setInterval>
+onMounted(() => { refreshDbg(); dbgTimer = setInterval(refreshDbg, 1000) })
+onUnmounted(() => clearInterval(dbgTimer))
 
 async function checkUpdate() {
   checking.value = true
@@ -110,6 +135,17 @@ async function checkUpdate() {
           </svg>
           {{ checking ? t('actions.checking') : t('actions.checkUpdate') }}
         </button>
+      </section>
+
+      <!-- ウィンドウ位置デバッグ（T012 iPadOS Stage Manager 診断用） -->
+      <section class="bg-gray-50 rounded-lg px-4 py-3 flex flex-col gap-1.5 text-xs font-mono text-gray-500">
+        <p class="text-xs font-sans font-semibold text-gray-400 uppercase tracking-wide mb-1">Window / Safe-Area Debug</p>
+        <div class="flex justify-between"><span>screenX / screenY</span><span class="text-gray-700">{{ dbgScreenX }} / {{ dbgScreenY }}</span></div>
+        <div class="flex justify-between"><span>standalone</span><span :class="dbgIsStandalone ? 'text-forest-700' : 'text-red-500'">{{ dbgIsStandalone }}</span></div>
+        <div class="flex justify-between"><span>WCO API</span><span :class="dbgHasWco ? 'text-forest-700' : 'text-red-500'">{{ dbgHasWco }}</span></div>
+        <div v-if="dbgHasWco" class="flex justify-between"><span>WCO visible</span><span :class="dbgWcoVisible ? 'text-forest-700' : 'text-red-500'">{{ dbgWcoVisible }}</span></div>
+        <div class="flex justify-between"><span>--wsa-left</span><span class="text-gray-700">{{ dbgWsaLeft }}</span></div>
+        <div class="flex justify-between"><span>--wsa-top</span><span class="text-gray-700">{{ dbgWsaTop }}</span></div>
       </section>
 
       <!-- リンク -->

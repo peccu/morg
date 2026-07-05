@@ -205,11 +205,23 @@ async function onLogout() {
 
       <!-- リロードボタン -->
       <button
-        class="w-11 h-11 flex items-center justify-center text-forest-300 hover:text-forest-100 cursor-pointer flex-shrink-0 text-base"
-        :class="isFetching ? 'animate-spin' : ''"
+        class="w-11 h-11 flex items-center justify-center text-forest-300 hover:text-forest-100 cursor-pointer flex-shrink-0"
         :title="t('actions.reload')"
         @click="onReload"
-      >↻</button>
+      >
+        <svg
+          :class="['w-5 h-5', isFetching && 'animate-spin']"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <polyline points="23 4 23 10 17 10" />
+          <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10" />
+        </svg>
+      </button>
 
       <!-- メニューボタン（ログアウトを格納） -->
       <div class="relative flex-shrink-0">

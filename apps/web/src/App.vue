@@ -3,8 +3,11 @@ import { computed, onMounted } from 'vue'
 import { useAuthStore } from '@/stores/auth'
 import { useTaskQueueStore } from '@/stores/taskQueue'
 import { useToast } from '@/composables/useToast'
+import { useWindowSafeArea } from '@/composables/useWindowSafeArea'
 import TaskQueueBanner from '@/components/TaskQueueBanner.vue'
 import DemoBanner from '@/components/DemoBanner.vue'
+
+useWindowSafeArea()
 
 const auth = useAuthStore()
 onMounted(() => auth.checkAuth())

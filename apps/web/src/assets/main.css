@@ -16,6 +16,8 @@
 
 @layer base {
   :root {
+    --wsa-left: 0px;
+    --wsa-top: 0px;
     --background: 0 0% 100%;
     --foreground: 240 10% 3.9%;
     --card: 0 0% 100%;
@@ -70,23 +72,18 @@
     color: hsl(var(--foreground));
     -webkit-tap-highlight-color: transparent;
   }
-  /*
-   * safe-top: titlebar-area-height は Window Controls Overlay (WCO) が有効なとき
-   * トラフィックライトボタン等のウィンドウコントロール領域の高さを返す。
-   * WCO 非対応環境では safe-area-inset-top にフォールバック。
-   */
+  /* --wsa-top / --wsa-left are set by useWindowSafeArea():
+   *   - Chromium WCO API on desktop
+   *   - screenY-based detection for iPadOS Stage Manager (Safari has no WCO support)
+   * env() fallbacks cover notched phones (safe-area-inset-*). */
   .safe-top {
-    padding-top: max(0.5rem, env(titlebar-area-height, env(safe-area-inset-top, 0px)));
+    padding-top: max(0.5rem, var(--wsa-top), env(safe-area-inset-top, 0px));
   }
   .safe-bottom {
     padding-bottom: max(0.5rem, env(safe-area-inset-bottom));
   }
-  /*
-   * safe-left: WCO 時に titlebar-area-x がトラフィックライト幅を返すため、
-   * それ以上の左パディングを確保してコンテンツが重ならないようにする。
-   */
   .safe-left {
-    padding-left: max(0.5rem, env(titlebar-area-x, env(safe-area-inset-left, 0px)));
+    padding-left: max(0.5rem, var(--wsa-left), env(safe-area-inset-left, 0px));
   }
 
   /* WCO: ヘッダーをドラッグ可能にし、インタラクティブ要素はドラッグ無効 */
