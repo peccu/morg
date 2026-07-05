@@ -23,7 +23,7 @@ function formatDate(raw: string): string {
     d.getFullYear() === now.getFullYear() &&
     d.getMonth() === now.getMonth() &&
     d.getDate() === now.getDate()
-  if (sameDay) return d.toLocaleTimeString(loc, { hour: '2-digit', minute: '2-digit' })
+  if (sameDay) return d.toLocaleTimeString(loc, { hour: '2-digit', minute: '2-digit', hour12: false })
   const sameYear = d.getFullYear() === now.getFullYear()
   if (sameYear) return d.toLocaleString(loc, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })
   return d.toLocaleString(loc, { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })
