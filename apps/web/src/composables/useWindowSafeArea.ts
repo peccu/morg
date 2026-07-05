@@ -27,17 +27,18 @@ function applyVars(): void {
     }
   }
 
-  // iPadOS Stage Manager fallback: traffic lights overlap content when the
-  // window is dragged to the very top of the screen (screenY ≈ 0).
-  // Safari does not support WCO env vars, so we detect the position in JS.
+  // iPadOS Stage Manager fallback: window.screenY is always 0 on Safari/iPadOS
+  // so we cannot reliably detect the window-at-top condition.
+  // Traffic lights are at the top-LEFT corner; shifting content 80px right
+  // is sufficient — no vertical (top) adjustment is needed because the 52px
+  // header already provides enough vertical space for the 28px traffic lights.
   const isStandalone = window.matchMedia('(display-mode: standalone)').matches
-  if (isStandalone && window.screenY <= 50) {
+  if (isStandalone) {
     root.style.setProperty('--wsa-left', `${TRAFFIC_LIGHT_W}px`)
-    root.style.setProperty('--wsa-top', `${TRAFFIC_LIGHT_H}px`)
   } else {
     root.style.setProperty('--wsa-left', '0px')
-    root.style.setProperty('--wsa-top', '0px')
   }
+  root.style.setProperty('--wsa-top', '0px')
 }
 
 export function useWindowSafeArea(): void {
