@@ -4,6 +4,7 @@ import { useI18n } from 'vue-i18n'
 import ThreadListItem from './ThreadListItem.vue'
 import type { ThreadListItem as TThreadListItem } from '@morg/shared'
 import { useToast } from '@/composables/useToast'
+import { useTaskQueueStore } from '@/stores/taskQueue'
 
 const props = defineProps<{
   threads: TThreadListItem[]
@@ -30,6 +31,10 @@ const selectedId = ref<string | null>(null)
 
 const { show: notify } = useToast()
 const { t } = useI18n()
+const taskQueue = useTaskQueueStore()
+// When the FAB is visible (banner collapsed, tasks present), add bottom padding
+// so the Load More button is not hidden behind the floating button.
+const fabVisible = computed(() => taskQueue.bannerCollapsed && taskQueue.tasks.length > 0)
 function copyText(text: string) {
   navigator.clipboard.writeText(text).then(() => notify(t('status.copied'), 'success'))
 }
@@ -115,7 +120,7 @@ onUnmounted(() => {
     <!-- スレッド一覧 -->
     <div
       class="flex-1 overflow-y-scroll min-h-0 thread-list-scroll"
-      :class="{ 'is-scrolling': isScrolling }"
+      :class="{ 'is-scrolling': isScrolling, 'pb-14': fabVisible }"
       @scroll.passive="onScroll"
     >
       <div v-if="isFetching && threads.length === 0" class="p-8 text-center text-gray-400 text-sm">

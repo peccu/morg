@@ -1,7 +1,12 @@
 import { describe, test, expect, vi, beforeEach, afterEach } from 'vitest'
 import { shallowMount } from '@vue/test-utils'
+import { createPinia, setActivePinia } from 'pinia'
 import ThreadList from '@/components/ThreadList.vue'
 import type { ThreadListItem } from '@morg/shared'
+
+vi.mock('@/stores/taskQueue', () => ({
+  useTaskQueueStore: () => ({ bannerCollapsed: false, tasks: [] }),
+}))
 
 const mockThreads: ThreadListItem[] = [
   {
@@ -45,6 +50,7 @@ function mountThreadList(overrides: Record<string, unknown> = {}) {
 
 describe('ThreadList', () => {
   beforeEach(() => {
+    setActivePinia(createPinia())
     vi.restoreAllMocks()
   })
 
