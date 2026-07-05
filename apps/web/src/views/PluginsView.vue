@@ -12,7 +12,7 @@ const { t } = useI18n()
 <template>
   <div class="h-dvh flex flex-col bg-white overflow-hidden">
     <!-- ヘッダー -->
-    <header class="bg-forest-900 border-b border-forest-800 flex items-center gap-2 px-2 flex-shrink-0 safe-top h-[52px]">
+    <header class="bg-forest-900 border-b border-forest-800 flex items-center gap-2 safe-left pr-2 flex-shrink-0 safe-top min-h-[52px] app-titlebar">
       <button
         class="w-11 h-11 flex items-center justify-center text-forest-300 hover:text-forest-100 cursor-pointer text-xl"
         @click="router.back()"

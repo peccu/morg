@@ -70,11 +70,36 @@
     color: hsl(var(--foreground));
     -webkit-tap-highlight-color: transparent;
   }
+  /*
+   * safe-top: titlebar-area-height は Window Controls Overlay (WCO) が有効なとき
+   * トラフィックライトボタン等のウィンドウコントロール領域の高さを返す。
+   * WCO 非対応環境では safe-area-inset-top にフォールバック。
+   */
   .safe-top {
-    padding-top: max(0.5rem, env(safe-area-inset-top));
+    padding-top: max(0.5rem, env(titlebar-area-height, env(safe-area-inset-top, 0px)));
   }
   .safe-bottom {
     padding-bottom: max(0.5rem, env(safe-area-inset-bottom));
+  }
+  /*
+   * safe-left: WCO 時に titlebar-area-x がトラフィックライト幅を返すため、
+   * それ以上の左パディングを確保してコンテンツが重ならないようにする。
+   */
+  .safe-left {
+    padding-left: max(0.5rem, env(titlebar-area-x, env(safe-area-inset-left, 0px)));
+  }
+
+  /* WCO: ヘッダーをドラッグ可能にし、インタラクティブ要素はドラッグ無効 */
+  .app-titlebar {
+    -webkit-app-region: drag;
+    app-region: drag;
+  }
+  .app-titlebar button,
+  .app-titlebar a,
+  .app-titlebar input,
+  .app-titlebar select {
+    -webkit-app-region: no-drag;
+    app-region: no-drag;
   }
 
   /* スレッド一覧スクロールバー: スクロール中のみ表示 */

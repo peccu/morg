@@ -5,6 +5,7 @@
   "start_url": "/inbox",
   "scope": "/",
   "display": "standalone",
+  "display_override": ["window-controls-overlay", "standalone"],
   "background_color": "#ffffff",
   "theme_color": "#ffffff",
   "icons": [

@@ -176,7 +176,7 @@ async function onLogout() {
 <template>
   <div class="h-dvh flex flex-col bg-white overflow-hidden">
     <!-- ヘッダー -->
-    <header class="bg-forest-900 border-b border-forest-800 flex items-center gap-1.5 px-2 flex-shrink-0 safe-top h-[52px]">
+    <header class="bg-forest-900 border-b border-forest-800 flex items-center gap-1.5 safe-left pr-2 flex-shrink-0 safe-top min-h-[52px] app-titlebar">
       <button
         class="font-bold text-sm w-10 flex-shrink-0 text-forest-100 hover:text-white cursor-pointer text-left"
         :title="t('app.tagline')"

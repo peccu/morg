@@ -243,7 +243,7 @@ function copyText(text: string) {
 <template>
   <div class="h-dvh flex flex-col bg-white overflow-hidden">
     <!-- ヘッダー -->
-    <header class="border-b flex items-center gap-2 px-3 flex-shrink-0 safe-top min-h-[44px]">
+    <header class="border-b flex items-center gap-2 safe-left pr-3 flex-shrink-0 safe-top min-h-[44px] app-titlebar">
       <button
         class="flex items-center gap-1 text-sm text-gray-500 hover:text-gray-800 cursor-pointer min-h-[44px] pr-2"
         @click="router.back()"
