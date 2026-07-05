@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { useTaskQueueStore } from '@/stores/taskQueue'
@@ -18,15 +19,29 @@ function etaText(task: QueueTask) {
   if (secs < 60) return t('time.sec', { n: secs })
   return t('time.min', { n: Math.ceil(secs / 60) })
 }
+
+const activeTasks = computed(() => store.tasks.filter(t => t.status === 'pending' || t.status === 'running'))
+const hasRunning  = computed(() => store.tasks.some(t => t.status === 'running'))
 </script>
 
 <template>
   <Teleport to="body">
+    <!-- 展開バナー -->
     <Transition name="queue-banner">
       <div
-        v-if="store.tasks.length > 0"
+        v-if="store.tasks.length > 0 && !store.bannerCollapsed"
         class="fixed bottom-0 left-0 right-0 z-[150] bg-forest-900/95 backdrop-blur-sm text-white safe-bottom"
       >
+        <!-- 折りたたみヘッダー -->
+        <div class="flex items-center justify-between px-3 h-7 border-b border-forest-700/60">
+          <span class="text-xs text-forest-400">{{ store.tasks.length }} {{ store.tasks.length === 1 ? 'task' : 'tasks' }}</span>
+          <button
+            class="w-8 h-7 flex items-center justify-center text-forest-400 hover:text-white cursor-pointer text-xs"
+            @click="store.toggleBanner()"
+            aria-label="collapse"
+          >▼</button>
+        </div>
+
         <div
           v-for="task in store.tasks"
           :key="task.id"
@@ -99,6 +114,34 @@ function etaText(task: QueueTask) {
         </div>
       </div>
     </Transition>
+
+    <!-- フローティング展開ボタン（折りたたみ時） -->
+    <Transition name="fab">
+      <button
+        v-if="store.tasks.length > 0 && store.bannerCollapsed"
+        class="fixed bottom-4 right-4 z-[160] flex items-center gap-1.5 h-9 px-3 rounded-full bg-forest-800 text-white shadow-lg hover:bg-forest-700 cursor-pointer transition-colors"
+        @click="store.toggleBanner()"
+        aria-label="expand task queue"
+      >
+        <!-- スピナー or 完了アイコン -->
+        <svg
+          v-if="hasRunning"
+          class="w-3 h-3 animate-spin text-forest-300"
+          xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+        >
+          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"/>
+        </svg>
+        <span v-else class="text-xs">✓</span>
+
+        <!-- アクティブ件数 -->
+        <span v-if="activeTasks.length > 0" class="text-xs font-medium">{{ activeTasks.length }}</span>
+        <span v-else class="text-xs font-medium">{{ store.tasks.length }}</span>
+
+        <!-- 展開インジケーター -->
+        <span class="text-forest-400 text-xs">▲</span>
+      </button>
+    </Transition>
   </Teleport>
 </template>
 
@@ -110,5 +153,15 @@ function etaText(task: QueueTask) {
 .queue-banner-enter-from,
 .queue-banner-leave-to {
   transform: translateY(100%);
+}
+
+.fab-enter-active,
+.fab-leave-active {
+  transition: opacity 0.15s, transform 0.15s;
+}
+.fab-enter-from,
+.fab-leave-to {
+  opacity: 0;
+  transform: scale(0.8);
 }
 </style>

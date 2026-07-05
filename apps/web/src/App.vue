@@ -11,7 +11,10 @@ onMounted(() => auth.checkAuth())
 
 const { toasts, dismiss } = useToast()
 const taskQueue = useTaskQueueStore()
-const toastBottom = computed(() => taskQueue.tasks.length > 0 ? '56px' : '16px')
+const toastBottom = computed(() => {
+  if (taskQueue.tasks.length === 0 || taskQueue.bannerCollapsed) return '16px'
+  return `${28 + taskQueue.tasks.length * 44}px`
+})
 </script>
 
 <template>

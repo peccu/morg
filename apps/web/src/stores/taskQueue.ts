@@ -25,6 +25,7 @@ export interface QueueTask {
 export const useTaskQueueStore = defineStore('taskQueue', () => {
   const queryClient = useQueryClient()
   const tasks = ref<QueueTask[]>([])
+  const bannerCollapsed = ref(false)
   let _running = false
 
   const hasActiveTasks = computed(() =>
@@ -40,6 +41,8 @@ export const useTaskQueueStore = defineStore('taskQueue', () => {
     }
     return ids
   })
+
+  function toggleBanner() { bannerCollapsed.value = !bannerCollapsed.value }
 
   function enqueue(opts: {
     action: BatchAction
@@ -57,6 +60,7 @@ export const useTaskQueueStore = defineStore('taskQueue', () => {
       etaMs: null,
       error: null,
     })
+    bannerCollapsed.value = false
     _tryRunNext()
   }
 
@@ -145,5 +149,5 @@ export const useTaskQueueStore = defineStore('taskQueue', () => {
     })
   }
 
-  return { tasks, hasActiveTasks, processingThreadIds, enqueue, dismiss, retry }
+  return { tasks, hasActiveTasks, processingThreadIds, bannerCollapsed, toggleBanner, enqueue, dismiss, retry }
 })
