@@ -25,8 +25,8 @@ function formatDate(raw: string): string {
     d.getDate() === now.getDate()
   if (sameDay) return d.toLocaleTimeString(loc, { hour: '2-digit', minute: '2-digit', hour12: false })
   const sameYear = d.getFullYear() === now.getFullYear()
-  if (sameYear) return d.toLocaleString(loc, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })
-  return d.toLocaleString(loc, { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })
+  if (sameYear) return d.toLocaleString(loc, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit', hour12: false })
+  return d.toLocaleString(loc, { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit', hour12: false })
 }
 
 function senderName(from: string): string {

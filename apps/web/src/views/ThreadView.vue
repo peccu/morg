@@ -210,8 +210,8 @@ function formatDate(raw: string): string {
   const sameYear = d.getFullYear() === now.getFullYear()
   const sameDay = d.toDateString() === now.toDateString()
   if (sameDay) return d.toLocaleTimeString(loc, { hour: '2-digit', minute: '2-digit', hour12: false })
-  if (sameYear) return d.toLocaleString(loc, { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' })
-  return d.toLocaleString(loc, { year: 'numeric', month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' })
+  if (sameYear) return d.toLocaleString(loc, { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit', hour12: false })
+  return d.toLocaleString(loc, { year: 'numeric', month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit', hour12: false })
 }
 
 const firstFrom = computed(() =>
