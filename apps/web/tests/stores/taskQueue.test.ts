@@ -118,12 +118,12 @@ describe('useTaskQueueStore', () => {
     expect(store.tasks[1].status).toBe('pending')
   })
 
-  test('retry: エラータスクの未処理分だけ新タスクとして再エンキューされる', async () => {
+  test('retry: 同タスクを processed 位置から再開し、完了まで進む', async () => {
     let callCount = 0
     vi.stubGlobal('fetch', vi.fn().mockImplementation(() => {
       callCount++
-      // 1回目は成功、2回目はエラー
-      if (callCount === 1) {
+      // 1回目は成功、2回目はエラー、3回目（リトライ後）は成功
+      if (callCount === 1 || callCount === 3) {
         return Promise.resolve({
           status: 200,
           json: () => Promise.resolve({ succeeded: 20, failed: 0 }),
@@ -138,16 +138,21 @@ describe('useTaskQueueStore', () => {
     const store = useTaskQueueStore()
     // 21件 → chunk=20 で 2回リクエスト (1回目成功, 2回目失敗)
     const ids = Array.from({ length: 21 }, (_, i) => `t${i}`)
-    store.enqueue({ action: 'trash', threadIds: ids, label: 'test', originPath: '/inbox' })
+    store.enqueue({ action: 'trash', threadIds: ids, label: 'test (21)', originPath: '/inbox' })
 
     await vi.waitFor(() => expect(store.tasks[0].status).toBe('error'))
     expect(store.tasks[0].processed).toBe(20)
 
-    // リトライ: 残り1件
+    // リトライ: 同タスクが pending に戻り processed=20 のまま継続
     store.retry(store.tasks[0].id)
     expect(store.tasks).toHaveLength(1)
-    expect(store.tasks[0].total).toBe(1)
-    expect(store.tasks[0].threadIds).toEqual(['t20'])
+    expect(store.tasks[0].total).toBe(21)           // total は変わらない
+    expect(store.tasks[0].threadIds).toHaveLength(21) // threadIds も変わらない
+    expect(store.tasks[0].processed).toBe(20)        // 済み分は保持
+
+    // 残り1件を処理して done になる
+    await vi.waitFor(() => expect(store.tasks[0]?.status).toBe('done'))
+    expect(store.tasks[0].processed).toBe(21)
   })
 
   test('2つのタスクが逐次実行されて両方 done になる', async () => {

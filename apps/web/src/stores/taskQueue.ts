@@ -127,7 +127,8 @@ export const useTaskQueueStore = defineStore('taskQueue', () => {
     const recentDurations: number[] = []
     let totalFailed = 0
     try {
-      for (let i = 0; i < task.threadIds.length; i += CHUNK_SIZE) {
+      // Start from task.processed so retried/resumed tasks skip already-done items
+      for (let i = task.processed; i < task.threadIds.length; i += CHUNK_SIZE) {
         const chunk = task.threadIds.slice(i, i + CHUNK_SIZE)
         const start = Date.now()
 
@@ -173,32 +174,25 @@ export const useTaskQueueStore = defineStore('taskQueue', () => {
   function retry(id: string) {
     const task = tasks.value.find(t => t.id === id)
     if (!task || task.status !== 'error') return
-    const remaining = task.threadIds.slice(task.processed)
-    if (remaining.length === 0) return
-    dismiss(id)
-    enqueue({
-      action: task.action,
-      threadIds: remaining,
-      labelId: task.labelId,
-      label: task.label,
-      originPath: task.originPath,
-    })
+    if (task.processed >= task.total) return
+    // Resume the same task object from where it left off — no progress reset
+    task.status = 'pending'
+    task.error = null
+    task.etaMs = null
+    bannerCollapsed.value = false
+    _tryRunNext()
   }
 
   function resume(id: string) {
     const task = tasks.value.find(t => t.id === id)
     if (!task || task.status !== 'interrupted') return
-    // Re-enqueue only the unprocessed portion
-    const remaining = task.threadIds.slice(task.processed)
-    dismiss(id)
-    if (remaining.length === 0) return
-    enqueue({
-      action: task.action,
-      threadIds: remaining,
-      labelId: task.labelId,
-      label: task.label,
-      originPath: task.originPath,
-    })
+    if (task.processed >= task.total) return
+    // Resume the same task object from where it left off
+    task.status = 'pending'
+    task.error = null
+    task.etaMs = null
+    bannerCollapsed.value = false
+    _tryRunNext()
   }
 
   return { tasks, hasActiveTasks, hasInterrupted, processingThreadIds, bannerCollapsed, toggleBanner, enqueue, dismiss, retry, resume }
