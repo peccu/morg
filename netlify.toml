@@ -11,6 +11,12 @@
   to = "/index.html"
   status = 200
 
+# version.json is polled by the app for fast update detection — must not be cached.
+[[headers]]
+  for = "/version.json"
+  [headers.values]
+    Cache-Control = "no-store, no-cache, must-revalidate"
+
 [dev]
   command = "bun run dev:web"
   framework = "#custom"

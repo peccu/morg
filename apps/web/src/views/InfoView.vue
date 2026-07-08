@@ -2,7 +2,7 @@
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
-import { useAppUpdate } from '@/composables/useAppUpdate'
+import { useAppUpdate, checkForUpdate } from '@/composables/useAppUpdate'
 import { getDbStats, clearQueryCache, clearAllDbCache } from '@/lib/thread-db'
 import { clearAllInMemoryCaches } from '@/composables/useThreads'
 
@@ -96,30 +96,8 @@ async function checkUpdate() {
   checking.value = true
   checked.value = false
   try {
-    const reg = await navigator.serviceWorker.getRegistration()
-    if (reg) {
-      await reg.update()
-      // installing 中のSWがあれば installed 状態になるまで待つ（最大5秒）
-      // 固定 1秒ではインストール完了前に判定してしまい needRefresh が false のまま誤表示される
-      if (reg.installing) {
-        await new Promise<void>(resolve => {
-          const sw = reg.installing!
-          const done = () => {
-            sw.removeEventListener('statechange', onStateChange)
-            resolve()
-          }
-          const onStateChange = () => {
-            if (sw.state === 'installed' || sw.state === 'activating' || sw.state === 'activated') done()
-          }
-          sw.addEventListener('statechange', onStateChange)
-          setTimeout(done, 5000)
-        })
-      }
-      // needRefresh への伝播を待つ短い余裕
-      await new Promise<void>(resolve => setTimeout(resolve, 100))
-    }
-  } catch {
-    // ServiceWorker 未対応環境では無視
+    // Fast path: compare version.json timestamp (a few KB) instead of downloading the full SW
+    await checkForUpdate()
   } finally {
     checking.value = false
     if (!needRefresh.value) checked.value = true

@@ -3,9 +3,21 @@ import vue from '@vitejs/plugin-vue'
 import tailwindcss from '@tailwindcss/vite'
 import { VitePWA } from 'vite-plugin-pwa'
 import { fileURLToPath, URL } from 'node:url'
+import { writeFileSync } from 'node:fs'
+import { join } from 'node:path'
+
+// Shared timestamp for __BUILD_DATE__ define and public/version.json
+const buildDate = new Date().toISOString()
 
 export default defineConfig({
   plugins: [
+    // Write version.json to public/ so the running app can fetch it for fast update detection
+    {
+      name: 'generate-version-json',
+      configResolved(config) {
+        writeFileSync(join(config.root, 'public', 'version.json'), JSON.stringify({ buildDate }))
+      },
+    },
     vue(),
     tailwindcss(),
     VitePWA({
@@ -28,7 +40,7 @@ export default defineConfig({
     }),
   ],
   define: {
-    __BUILD_DATE__: JSON.stringify(new Date().toISOString()),
+    __BUILD_DATE__: JSON.stringify(buildDate),
   },
   resolve: {
     alias: {
