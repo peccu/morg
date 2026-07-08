@@ -222,8 +222,13 @@ const senderName  = computed(() => parseName(firstFrom.value) || senderEmail.val
 
 // ──── アクション ────
 async function runThreadAction(action: BatchAction) {
-  await execThread([id.value], action)
-  router.back()
+  const threadId = id.value
+  await execThread([threadId], action)
+  // Only navigate away if the user is still on this thread's detail page.
+  // If they navigated elsewhere during the async call, skip to avoid disrupting their position.
+  if (route.name === 'thread' && route.params.id === threadId) {
+    router.back()
+  }
 }
 
 async function runMsgAction(action: BatchAction) {
