@@ -20,6 +20,7 @@ import { useTaskQueueStore } from '@/stores/taskQueue'
 
 describe('useTaskQueueStore', () => {
   beforeEach(() => {
+    localStorage.clear()
     setActivePinia(createPinia())
     vi.clearAllMocks()
     vi.mocked(mockInvalidate).mockResolvedValue(undefined)

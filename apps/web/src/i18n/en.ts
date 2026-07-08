@@ -31,6 +31,7 @@ export default {
     checking: 'Checking...',
     clear: 'Clear',
     retry: 'Retry',
+    resume: 'Resume',
     loadMore: 'Load More',
     loadMoreSearch: 'Load More',
     operationFailed: 'Operation failed',
@@ -142,6 +143,7 @@ export default {
   queue: {
     waiting: 'queued',
     done: 'done',
+    interrupted: 'interrupted',
   },
   demo: {
     banner: 'Demo mode — not connected to real email',

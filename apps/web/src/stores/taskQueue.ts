@@ -1,4 +1,4 @@
-import { ref, computed } from 'vue'
+import { ref, computed, watch } from 'vue'
 import { defineStore } from 'pinia'
 import { useQueryClient } from '@tanstack/vue-query'
 import type { BatchAction } from '@morg/shared'
@@ -7,6 +7,7 @@ import { applyThreadCacheUpdate } from '@/lib/thread-cache'
 
 const CHUNK_SIZE = 20
 const TIMING_WINDOW = 3
+const STORAGE_KEY = 'morg:taskQueue'
 
 export interface QueueTask {
   id: string
@@ -15,21 +16,56 @@ export interface QueueTask {
   threadIds: string[]
   labelId?: string
   originPath: string
-  status: 'pending' | 'running' | 'done' | 'error'
+  status: 'pending' | 'running' | 'done' | 'error' | 'interrupted'
   processed: number
   total: number
   etaMs: number | null
   error: string | null
 }
 
+function saveTasks(tasks: QueueTask[]): void {
+  try {
+    // done tasks need not survive a reload; etaMs is runtime-only
+    const toSave = tasks
+      .filter(t => t.status !== 'done')
+      .map(({ etaMs: _eta, ...t }) => t)
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(toSave))
+  } catch { /* storage full or unavailable */ }
+}
+
+function loadTasks(): QueueTask[] {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY)
+    if (!raw) return []
+    const saved = JSON.parse(raw) as Omit<QueueTask, 'etaMs'>[]
+    return saved.map(t => ({
+      ...t,
+      etaMs: null,
+      // tasks that were running or pending when the browser closed need user
+      // to explicitly resume — they are marked interrupted so nothing starts
+      // automatically on reload
+      status: (t.status === 'running' || t.status === 'pending') ? 'interrupted' : t.status,
+    }))
+  } catch {
+    return []
+  }
+}
+
 export const useTaskQueueStore = defineStore('taskQueue', () => {
   const queryClient = useQueryClient()
-  const tasks = ref<QueueTask[]>([])
+  const tasks = ref<QueueTask[]>(loadTasks())
   const bannerCollapsed = ref(false)
   let _running = false
 
+  // Persist whenever tasks change
+  watch(tasks, (t) => saveTasks(t), { deep: true })
+
   const hasActiveTasks = computed(() =>
     tasks.value.some(t => t.status === 'pending' || t.status === 'running'),
+  )
+
+  const hasInterrupted = computed(() =>
+    tasks.value.some(t => t.status === 'interrupted'),
   )
 
   const processingThreadIds = computed<Set<string>>(() => {
@@ -149,5 +185,21 @@ export const useTaskQueueStore = defineStore('taskQueue', () => {
     })
   }
 
-  return { tasks, hasActiveTasks, processingThreadIds, bannerCollapsed, toggleBanner, enqueue, dismiss, retry }
+  function resume(id: string) {
+    const task = tasks.value.find(t => t.id === id)
+    if (!task || task.status !== 'interrupted') return
+    // Re-enqueue only the unprocessed portion
+    const remaining = task.threadIds.slice(task.processed)
+    dismiss(id)
+    if (remaining.length === 0) return
+    enqueue({
+      action: task.action,
+      threadIds: remaining,
+      labelId: task.labelId,
+      label: task.label,
+      originPath: task.originPath,
+    })
+  }
+
+  return { tasks, hasActiveTasks, hasInterrupted, processingThreadIds, bannerCollapsed, toggleBanner, enqueue, dismiss, retry, resume }
 })

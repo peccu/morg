@@ -31,6 +31,7 @@ export default {
     checking: '確認中...',
     clear: 'クリア',
     retry: 'リトライ',
+    resume: '再開',
     loadMore: 'もっと読む',
     loadMoreSearch: '続きを取得',
     operationFailed: '操作に失敗しました',
@@ -142,6 +143,7 @@ export default {
   queue: {
     waiting: '待機中',
     done: '完了',
+    interrupted: '中断',
   },
   demo: {
     banner: 'デモモード — 実際のメールには接続していません',

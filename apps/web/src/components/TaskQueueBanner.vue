@@ -20,8 +20,9 @@ function etaText(task: QueueTask) {
   return t('time.min', { n: Math.ceil(secs / 60) })
 }
 
-const activeTasks = computed(() => store.tasks.filter(t => t.status === 'pending' || t.status === 'running'))
-const hasRunning  = computed(() => store.tasks.some(t => t.status === 'running'))
+const activeTasks    = computed(() => store.tasks.filter(t => t.status === 'pending' || t.status === 'running'))
+const hasRunning     = computed(() => store.tasks.some(t => t.status === 'running'))
+const hasInterrupted = computed(() => store.hasInterrupted)
 </script>
 
 <template>
@@ -59,9 +60,10 @@ const hasRunning  = computed(() => store.tasks.some(t => t.status === 'running')
                 <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
                 <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"/>
               </svg>
-              <span v-else-if="task.status === 'pending'" class="text-forest-400 text-xs">⏳</span>
-              <span v-else-if="task.status === 'done'" class="text-green-400 text-xs">✓</span>
-              <span v-else-if="task.status === 'error'" class="text-red-400 text-xs">⚠</span>
+              <span v-else-if="task.status === 'pending'"     class="text-forest-400 text-xs">⏳</span>
+              <span v-else-if="task.status === 'done'"        class="text-green-400 text-xs">✓</span>
+              <span v-else-if="task.status === 'error'"       class="text-red-400 text-xs">⚠</span>
+              <span v-else-if="task.status === 'interrupted'" class="text-amber-400 text-xs">⏸</span>
             </span>
 
             <!-- ラベル -->
@@ -82,12 +84,25 @@ const hasRunning  = computed(() => store.tasks.some(t => t.status === 'running')
             <!-- error -->
             <span v-else-if="task.status === 'error'" class="text-xs text-red-300 truncate flex-shrink min-w-0 max-w-[120px]">{{ task.error }}</span>
 
+            <!-- interrupted: progress so far -->
+            <template v-else-if="task.status === 'interrupted'">
+              <span class="text-xs text-amber-300 flex-shrink-0">{{ task.processed }}/{{ task.total }}</span>
+              <span class="text-xs text-amber-400 flex-shrink-0">{{ t('queue.interrupted') }}</span>
+            </template>
+
             <!-- 戻るボタン（running/pending） -->
             <button
               v-if="task.status === 'running' || task.status === 'pending'"
               class="text-xs text-forest-300 hover:text-white px-2 h-8 rounded hover:bg-forest-700 cursor-pointer flex-shrink-0 transition-colors"
               @click="router.push(task.originPath)"
             >{{ t('actions.back') }}</button>
+
+            <!-- 再開ボタン（interrupted） -->
+            <button
+              v-if="task.status === 'interrupted'"
+              class="text-xs text-amber-300 hover:text-white px-2 h-8 rounded hover:bg-amber-700 cursor-pointer flex-shrink-0 transition-colors font-medium"
+              @click="store.resume(task.id)"
+            >{{ t('actions.resume') }}</button>
 
             <!-- リトライボタン（error かつ未処理残りあり） -->
             <button
@@ -96,18 +111,19 @@ const hasRunning  = computed(() => store.tasks.some(t => t.status === 'running')
               @click="store.retry(task.id)"
             >{{ t('actions.retry') }}</button>
 
-            <!-- 閉じるボタン（done/error） -->
+            <!-- 閉じるボタン（done/error/interrupted） -->
             <button
-              v-if="task.status === 'done' || task.status === 'error'"
+              v-if="task.status === 'done' || task.status === 'error' || task.status === 'interrupted'"
               class="w-8 h-8 flex items-center justify-center text-forest-400 hover:text-white cursor-pointer flex-shrink-0"
               @click="store.dismiss(task.id)"
             >✕</button>
           </div>
 
-          <!-- プログレスバー（running のみ） -->
-          <div v-if="task.status === 'running'" class="h-0.5 bg-forest-700">
+          <!-- プログレスバー（running / interrupted） -->
+          <div v-if="task.status === 'running' || task.status === 'interrupted'" class="h-0.5 bg-forest-700">
             <div
-              class="h-0.5 bg-forest-400 transition-[width] duration-300"
+              class="h-0.5 transition-[width] duration-300"
+              :class="task.status === 'interrupted' ? 'bg-amber-500' : 'bg-forest-400'"
               :style="{ width: progressPct(task) + '%' }"
             />
           </div>
@@ -123,7 +139,7 @@ const hasRunning  = computed(() => store.tasks.some(t => t.status === 'running')
         @click="store.toggleBanner()"
         aria-label="expand task queue"
       >
-        <!-- スピナー or 完了アイコン -->
+        <!-- スピナー or 中断 or 完了アイコン -->
         <svg
           v-if="hasRunning"
           class="w-3 h-3 animate-spin text-forest-300"
@@ -132,6 +148,7 @@ const hasRunning  = computed(() => store.tasks.some(t => t.status === 'running')
           <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
           <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"/>
         </svg>
+        <span v-else-if="hasInterrupted" class="text-xs text-amber-400">⏸</span>
         <span v-else class="text-xs">✓</span>
 
         <!-- アクティブ件数 -->
