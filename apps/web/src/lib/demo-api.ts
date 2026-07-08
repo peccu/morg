@@ -1,4 +1,4 @@
-import { DEMO_LABELS, DEMO_THREAD_LIST, getDemoThread, getDemoThreadList } from './demo-data'
+import { DEMO_LABELS, DEMO_THREAD_LIST, DEMO_SENT_LIST, getDemoThread, getDemoThreadList } from './demo-data'
 
 function ok(data: unknown): Response {
   return new Response(JSON.stringify(data), {
@@ -14,8 +14,7 @@ export function demoFetch(url: string, init?: RequestInit): Response | null {
   if (path.endsWith('gmail-threads')) {
     const q = search.get('q') ?? 'in:inbox'
     const sender = search.get('sender')
-    let list = getDemoThreadList(q)
-    if (sender) list = list.filter(t => t.from.toLowerCase().includes(sender.toLowerCase()))
+    const list = getDemoThreadList(q, sender)
     return ok({ threads: list, nextPageToken: undefined, resultSizeEstimate: list.length })
   }
 
@@ -27,7 +26,7 @@ export function demoFetch(url: string, init?: RequestInit): Response | null {
   }
 
   if (path.endsWith('gmail-labels')) {
-    return ok(DEMO_LABELS)
+    return ok({ labels: DEMO_LABELS })
   }
 
   if (path.endsWith('gmail-batch') || path.endsWith('gmail-message-batch')) {
@@ -49,5 +48,5 @@ export function demoFetch(url: string, init?: RequestInit): Response | null {
 }
 
 export function filterDemoSenders(threads = DEMO_THREAD_LIST) {
-  return threads
+  return [...threads, ...DEMO_SENT_LIST]
 }
