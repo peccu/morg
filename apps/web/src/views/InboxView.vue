@@ -85,6 +85,7 @@ watch(
       fetchNextPage()
     }
   },
+  { immediate: true },
 )
 
 function onStopFetch() {
