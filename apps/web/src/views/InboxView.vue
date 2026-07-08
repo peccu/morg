@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { ref, computed, watch, defineComponent, h } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
-import { useQueryClient } from '@tanstack/vue-query'
 import { useI18n } from 'vue-i18n'
 import { useAuthStore } from '@/stores/auth'
 import { useThreads } from '@/composables/useThreads'
@@ -38,11 +37,10 @@ const SidebarItem = defineComponent({
 })
 
 // ──────── 状態（URLクエリパラメータが source of truth） ────────
-const auth        = useAuthStore()
-const router      = useRouter()
-const route       = useRoute()
-const queryClient = useQueryClient()
-const showMenu    = ref(false)
+const auth     = useAuthStore()
+const router   = useRouter()
+const route    = useRoute()
+const showMenu = ref(false)
 
 // URL: ?q=in:inbox&sender=foo@bar.com
 const baseQuery    = computed(() => String(route.query.q   || 'in:inbox'))
@@ -60,7 +58,7 @@ const query = computed(() =>
 )
 
 // ──────── データ取得 ────────
-const { data, isFetching, isError, error, fetchNextPage, hasNextPage } = useThreads(query)
+const { data, isFetching, isError, error, fetchNextPage, hasNextPage, reload } = useThreads(query)
 const { data: labels } = useLabels()
 
 // ──────── 自動取得（送信者フィルタ or 検索条件あり の場合のみ） ────────
@@ -163,7 +161,8 @@ function onSelect(thread: ThreadListItem) {
 
 function onReload() {
   autoFetchStopped.value = false
-  queryClient.resetQueries({ queryKey: ['threads'], exact: false })
+  autoFetchActive.value = false
+  reload()
 }
 
 async function onLogout() {

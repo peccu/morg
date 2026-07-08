@@ -1,67 +1,19 @@
-import type { QueryClient, InfiniteData } from '@tanstack/vue-query'
-import type { BatchAction, ThreadListResponse, ThreadListItem } from '@morg/shared'
+import type { BatchAction } from '@morg/shared'
+import { applyActionToAllCaches } from '@/composables/useThreads'
+import { applyActionToDb } from '@/lib/thread-db'
 
-function updateThreads(
-  threads: ThreadListItem[],
-  idSet: Set<string>,
-  action: BatchAction,
-  labelId?: string,
-): ThreadListItem[] {
-  switch (action) {
-    case 'trash':
-    case 'archive':
-      return threads.filter((t) => !idSet.has(t.threadId))
-    case 'markRead':
-      return threads.map((t) =>
-        idSet.has(t.threadId)
-          ? { ...t, unread: false, labelIds: t.labelIds.filter((l) => l !== 'UNREAD') }
-          : t,
-      )
-    case 'markUnread':
-      return threads.map((t) =>
-        idSet.has(t.threadId)
-          ? { ...t, unread: true, labelIds: t.labelIds.includes('UNREAD') ? t.labelIds : [...t.labelIds, 'UNREAD'] }
-          : t,
-      )
-    case 'addLabel':
-      if (!labelId) return threads
-      return threads.map((t) =>
-        idSet.has(t.threadId)
-          ? { ...t, labelIds: t.labelIds.includes(labelId) ? t.labelIds : [...t.labelIds, labelId] }
-          : t,
-      )
-    case 'removeLabel':
-      if (!labelId) return threads
-      return threads.map((t) =>
-        idSet.has(t.threadId)
-          ? { ...t, labelIds: t.labelIds.filter((l) => l !== labelId) }
-          : t,
-      )
-    default: {
-      const _: never = action
-      return threads
-    }
-  }
-}
-
+// Update both the live in-memory reactive caches and the IndexedDB persistence layer.
+// The queryClient parameter is kept for call-site compatibility but is no longer used
+// here — thread details are invalidated separately in taskQueue.ts.
 export function applyThreadCacheUpdate(
-  queryClient: QueryClient,
+  _queryClient: unknown,
   threadIds: string[],
   action: BatchAction,
   labelId?: string,
-) {
-  const idSet = new Set(threadIds)
-  queryClient.setQueriesData<InfiniteData<ThreadListResponse>>(
-    { queryKey: ['threads'], exact: false },
-    (old) => {
-      if (!old) return old
-      return {
-        ...old,
-        pages: old.pages.map((page) => ({
-          ...page,
-          threads: updateThreads(page.threads, idSet, action, labelId),
-        })),
-      }
-    },
-  )
+): void {
+  // Immediate in-memory update so the UI reflects the change at once
+  applyActionToAllCaches(threadIds, action, labelId)
+
+  // Persist asynchronously — fire-and-forget is fine here
+  applyActionToDb(threadIds, action, labelId).catch(() => {})
 }

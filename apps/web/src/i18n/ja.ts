@@ -105,6 +105,10 @@ export default {
     buildDate: 'ビルド日時',
     update: 'アップデート',
     license: 'ライセンス (MIT)',
+    cache: 'ローカルキャッシュ',
+    cacheAll: 'すべてクリア',
+    cacheEmpty: 'キャッシュなし',
+    cacheTotal: '合計 {n}件',
   },
   plugins: {
     title: 'プラグイン',

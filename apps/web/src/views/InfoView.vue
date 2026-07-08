@@ -3,6 +3,8 @@ import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { useAppUpdate } from '@/composables/useAppUpdate'
+import { getDbStats, clearQueryCache, clearAllDbCache } from '@/lib/thread-db'
+import { clearAllInMemoryCaches } from '@/composables/useThreads'
 
 const router = useRouter()
 const { needRefresh, updateServiceWorker } = useAppUpdate()
@@ -47,8 +49,48 @@ function refreshDbg() {
 }
 
 let dbgTimer: ReturnType<typeof setInterval>
-onMounted(() => { refreshDbg(); dbgTimer = setInterval(refreshDbg, 1000) })
+onMounted(() => { refreshDbg(); dbgTimer = setInterval(refreshDbg, 1000); loadStats() })
 onUnmounted(() => clearInterval(dbgTimer))
+
+// ── Cache stats ──
+interface CacheStat { query: string; count: number; fetchedAt: number }
+const cacheStats = ref<CacheStat[]>([])
+const totalCached = computed(() => cacheStats.value.reduce((s, e) => s + e.count, 0))
+
+async function loadStats() {
+  cacheStats.value = await getDbStats()
+}
+
+function friendlyQuery(q: string) {
+  if (q === 'in:inbox') return 'Inbox'
+  if (q === 'is:unread') return 'Unread'
+  if (q === 'in:sent') return 'Sent'
+  if (q.startsWith('from:')) return `From: ${q.slice(5)}`
+  if (q.startsWith('label:')) return `Label: ${q.slice(6)}`
+  return q
+}
+
+function relativeTime(ms: number) {
+  const diff = Date.now() - ms
+  const min = Math.floor(diff / 60000)
+  if (min < 1) return '< 1m ago'
+  if (min < 60) return `${min}m ago`
+  const hr = Math.floor(min / 60)
+  if (hr < 24) return `${hr}h ago`
+  return `${Math.floor(hr / 24)}d ago`
+}
+
+async function clearOne(query: string) {
+  await clearQueryCache(query)
+  clearAllInMemoryCaches()
+  await loadStats()
+}
+
+async function clearAll() {
+  await clearAllDbCache()
+  clearAllInMemoryCaches()
+  await loadStats()
+}
 
 async function checkUpdate() {
   checking.value = true
@@ -148,6 +190,35 @@ async function checkUpdate() {
         <div v-if="dbgHasWco" class="flex justify-between"><span>WCO visible</span><span :class="dbgWcoVisible ? 'text-forest-700' : 'text-red-500'">{{ dbgWcoVisible }}</span></div>
         <div class="flex justify-between"><span>--wsa-left</span><span class="text-gray-700">{{ dbgWsaLeft }}</span></div>
         <div class="flex justify-between"><span>--wsa-top</span><span class="text-gray-700">{{ dbgWsaTop }}</span></div>
+      </section>
+
+      <!-- ローカルキャッシュ -->
+      <section class="bg-gray-50 rounded-lg px-4 py-3 flex flex-col gap-2">
+        <div class="flex items-center justify-between">
+          <p class="text-xs font-semibold text-gray-400 uppercase tracking-wide">{{ t('info.cache') }}</p>
+          <button
+            v-if="cacheStats.length > 0"
+            class="text-xs text-red-400 hover:text-red-600 cursor-pointer"
+            @click="clearAll"
+          >{{ t('actions.clear') }} {{ t('info.cacheAll') }}</button>
+        </div>
+
+        <p v-if="cacheStats.length === 0" class="text-sm text-gray-400">{{ t('info.cacheEmpty') }}</p>
+
+        <div v-else class="text-xs text-gray-500 mb-1">{{ t('info.cacheTotal', { n: totalCached }) }}</div>
+
+        <div
+          v-for="stat in cacheStats"
+          :key="stat.query"
+          class="flex items-center justify-between gap-2 text-sm"
+        >
+          <span class="truncate min-w-0 flex-1 text-gray-700">{{ friendlyQuery(stat.query) }}</span>
+          <span class="text-xs text-gray-400 flex-shrink-0">{{ stat.count }} · {{ relativeTime(stat.fetchedAt) }}</span>
+          <button
+            class="text-xs text-red-400 hover:text-red-600 cursor-pointer flex-shrink-0"
+            @click="clearOne(stat.query)"
+          >{{ t('actions.clear') }}</button>
+        </div>
       </section>
 
       <!-- リンク -->

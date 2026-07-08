@@ -105,6 +105,10 @@ export default {
     buildDate: 'Build date',
     update: 'Updates',
     license: 'License (MIT)',
+    cache: 'Local Cache',
+    cacheAll: 'all',
+    cacheEmpty: 'No cached data',
+    cacheTotal: '{n} threads cached',
   },
   plugins: {
     title: 'Plugins',
