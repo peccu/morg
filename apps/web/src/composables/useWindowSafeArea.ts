@@ -27,13 +27,14 @@ function applyVars(): void {
     }
   }
 
-  // iPadOS Stage Manager fallback: window.screenY is always 0 on Safari/iPadOS
-  // so we cannot reliably detect the window-at-top condition.
-  // Traffic lights are at the top-LEFT corner; shifting content 80px right
-  // is sufficient — no vertical (top) adjustment is needed because the 52px
-  // header already provides enough vertical space for the 28px traffic lights.
+  // iPadOS Stage Manager fallback.
+  // Traffic lights only appear on iPad (Stage Manager), never on iPhone.
+  // Smallest iPad short-side: 744 px (iPad mini 6th gen).
+  // Largest iPhone short-side: 430 px (iPhone Pro Max).
+  // Using screen.width/height (physical screen, not window) to tell them apart.
   const isStandalone = window.matchMedia('(display-mode: standalone)').matches
-  if (isStandalone) {
+  const isIpad = Math.min(screen.width, screen.height) > 500
+  if (isStandalone && isIpad) {
     root.style.setProperty('--wsa-left', `${TRAFFIC_LIGHT_W}px`)
   } else {
     root.style.setProperty('--wsa-left', '0px')
