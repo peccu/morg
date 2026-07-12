@@ -36,6 +36,22 @@ export function clearAllInMemoryCaches(): void {
   _cache.clear()
 }
 
+// Look up a single item from any cached query by threadId
+export function getThreadListItem(threadId: string): ThreadListItem | undefined {
+  for (const [, state] of _cache.entries()) {
+    const found = state.threads.find(t => t.threadId === threadId)
+    if (found) return found
+  }
+  return undefined
+}
+
+// Seed cache for a query — used in tests only
+export function _seedThreadsCache(query: string, threads: ThreadListItem[]): void {
+  const state = getState(query)
+  state.threads = [...threads]
+  state.initialized = true
+}
+
 async function fetchPage(q: string, pageToken?: string): Promise<ThreadListResponse> {
   const params = new URLSearchParams({ q })
   if (pageToken) params.set('pageToken', pageToken)
