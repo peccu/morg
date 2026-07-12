@@ -2,6 +2,12 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## 作業フロー
+
+@.claude/skills/workflow/SKILL.md
+
+---
+
 ## タスクと学習
 
 @TASKS.md
@@ -12,10 +18,6 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 - コミットは `main` に直接。英語のコミットメッセージ（日本語不可）
 - `git add -A` / `git add .` 禁止。変更ファイルを個別にステージング
-- **push前に必ず両方を実行して通過を確認してからpushする**:
-  ```bash
-  bun run --cwd apps/web test --run && bun run --cwd apps/web typecheck
-  ```
 
 ---
 
