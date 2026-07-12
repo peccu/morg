@@ -3,6 +3,7 @@ import { computed, ref, nextTick, onMounted, onUnmounted, type ComponentPublicIn
 import { useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { useThread } from '@/composables/useThread'
+import { getThreadListItem } from '@/composables/useThreads'
 import { useBulkAction } from '@/composables/useBulkAction'
 import { useMessageAction } from '@/composables/useMessageAction'
 import { useLabels } from '@/composables/useLabels'
@@ -19,6 +20,7 @@ const router = useRouter()
 const { t, te, locale } = useI18n()
 const id = computed(() => route.params.id as string)
 const { data: thread, isPending, isError, error: threadError } = useThread(id)
+const cachedItem = computed(() => getThreadListItem(id.value))
 
 // スレッド全体へのアクション
 const { execute: execThread, isProcessing: threadProcessing } = useBulkAction()
@@ -215,7 +217,7 @@ function formatDate(raw: string): string {
 }
 
 const firstFrom = computed(() =>
-  header(thread.value?.messages[0]?.payload?.headers ?? [], 'From'),
+  header(thread.value?.messages[0]?.payload?.headers ?? [], 'From') || cachedItem.value?.from || ''
 )
 const senderEmail = computed(() => parseEmail(firstFrom.value))
 const senderName  = computed(() => parseName(firstFrom.value) || senderEmail.value)
@@ -257,7 +259,7 @@ function copyText(text: string) {
 
     <!-- スレッドレベルアクションバー -->
     <div
-      v-if="thread"
+      v-if="thread || cachedItem"
       class="border-b flex items-center flex-shrink-0 min-h-[44px] bg-gray-50 relative"
     >
       <div v-if="isProcessing" class="absolute inset-0 bg-gray-50/80 flex items-center justify-center gap-2 z-10">
@@ -321,7 +323,34 @@ function copyText(text: string) {
     </div>
 
     <main class="flex-1 overflow-y-auto min-h-0">
-      <div v-if="isPending" class="p-8 text-center text-gray-400">{{ t('status.loading') }}</div>
+      <!-- ローカルキャッシュで即時プレビュー -->
+      <div v-if="isPending && cachedItem" class="max-w-4xl mx-auto px-3 py-4">
+        <h1 class="text-lg font-semibold text-gray-900 mb-4">
+          {{ cachedItem.subject || t('thread.noSubject') }}
+        </h1>
+        <div class="border rounded-lg overflow-hidden">
+          <div class="bg-gray-50 border-b flex items-stretch">
+            <div class="w-12 flex-shrink-0" />
+            <div class="flex-1 min-w-0 py-2 pr-3">
+              <div class="flex items-baseline justify-between gap-2">
+                <p class="text-sm font-medium text-gray-900 truncate min-w-0">
+                  {{ parseName(cachedItem.from) || parseEmail(cachedItem.from) }}
+                </p>
+                <time class="text-xs text-gray-400 flex-shrink-0 whitespace-nowrap">
+                  {{ formatDate(cachedItem.date) }}
+                </time>
+              </div>
+            </div>
+          </div>
+          <div class="px-3 py-3 space-y-2 animate-pulse">
+            <div class="h-4 bg-gray-200 rounded w-full" />
+            <div class="h-4 bg-gray-200 rounded w-5/6" />
+            <div class="h-4 bg-gray-200 rounded w-4/6" />
+          </div>
+        </div>
+      </div>
+      <!-- キャッシュなしのローディング -->
+      <div v-else-if="isPending" class="p-8 text-center text-gray-400">{{ t('status.loading') }}</div>
       <div v-else-if="isError" class="p-8 text-center text-red-400">
         <p class="font-medium">{{ t('status.fetchError') }}</p>
         <pre v-if="threadError?.message" class="mt-2 text-xs text-left whitespace-pre-wrap break-all bg-red-50 rounded p-3 max-w-sm mx-auto">{{ threadError.message }}</pre>
