@@ -320,7 +320,7 @@ async function onLogout() {
         </div>
 
         <!-- SP 送信者パネル -->
-        <div v-if="spTab === 'senders'" class="flex-1 min-h-0 overflow-hidden md:hidden">
+        <div v-if="spTab === 'senders'" class="flex-1 min-h-0 overflow-hidden md:hidden flex flex-col">
           <SenderPanel :senders="senders" :active-sender="activeSender" @select="onSenderSelect" />
         </div>
 
